@@ -1,0 +1,93 @@
+---
+title: "KNB 3"
+author: "Yuqing Lu"
+date: "11/7/2018"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Ciera suggested that looking for the most popular headers of all the datasets should be fun. I thought that would be interesting but had no idea where to start. So I went to the KNB website and joined their Slack channel. One of the staff, Matt Jones, helped get all the attributes of 69957 datasets, extracted from their metadata files using their API. 
+
+```{r, eval = FALSE}
+# load the package
+library(dataone)
+
+# set to the KNB database
+cn <- CNode("PROD")
+mn <- getMNode(cn, "urn:node:KNB")
+
+# this gives a data frame of the first 1000 metadata files 
+# with only their ID and attribute information
+all <-
+  list(
+    q = "formatType:METADATA+AND+attributeName:*",
+    fl = "identifier,formatId,attributeName,attributeDescription",
+    wt = "xml",
+    rows = "1000",
+    start = "0"
+  )
+allre <- query(mn, solrQuery = all, as = "data.frame")
+```
+
+Then I used a for loop to merged the 70 data frames and the resulting data frame is `allre`, saved as a csv file. This takes really long.
+
+
+```{r, eval = FALSE}
+# load the package
+library(dataone)
+
+# set to the KNB database
+cn <- CNode("PROD")
+mn <- getMNode(cn, "urn:node:KNB")
+
+allre <- data.frame()
+for (i in seq(0, 69000, 1000)) {
+  all <-
+  list(
+    q = "formatType:METADATA+AND+attributeName:*",
+    fl = "identifier,formatId,attributeName,attributeDescription",
+    wt = "xml",
+    rows = "1000",
+    start = paste0(i)
+  )
+  allre <- rbind(allre, query(mn, solrQuery = all, as = "data.frame"))
+}
+write.csv(allre, file = "~/Documents/nahis/knb-attrs.csv")
+```
+
+Next I extract all the attribute names, in lower case, in the data frame and put them into one vector, `attrs`.
+
+Of course, some attributes may have different names even though they mean the same thing as other attributes. For example, some datasets may have an attribute names "len", which is the same as "length"; or some may have abbreviations. And this may be harmful to this exploration. So we may want to change the similar attribute
+
+```{r, eval=FALSE}
+# this function gives all the attribute names for one metafile, ie, one row of allre
+get_attr <- function(x) {
+  tolower(unlist(strsplit(allre$attributeName[x], "\\s+")))
+}
+attrs <- sapply(1:69957, get_attr, simplify=TRUE)
+```
+
+Now I make a frequency table of all the attribute names and make a barchart of them in descending order of frequency. Thus we can see which attributes are the most popular.  
+
+```{r, eval = FALSE}
+attr_tab <- table(factor(unlist(attrs)))
+most_pop <- sort(attr_tab, decreasing=TRUE)
+write.csv(most_pop, file = "~/Documents/nahis/knb-pop-attrs.csv")
+```
+
+```{r, eval=FALSE}
+pop_df <- data.frame(freq = as.numeric(unname(most_pop)), attr = names(most_pop))
+pop_df <- head(pop_df, 50)
+library(ggplot2)
+ggplot(data=pop_df, aes(x=freq, y=attr)) +
+  geom_bar(stat="identity", fill="light blue", descending = TRUE)
+  
+```
+
+So we see that the first five attributes don't have any special meanings. They just represend time/data. So let's look at 6th to 10th 
+```{r, eval=FALSE}
+barplot(most_pop[6:20], col = "light blue", horiz=TRUE, las=1)
+```
