@@ -7,9 +7,12 @@ output: github_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, fig.path = '../image/')
+cn <- CNode("PROD")
 ```
 
-Ciera suggested that looking for the most popular headers of all the datasets should be fun. I thought that would be interesting but had no idea where to start. So I went to the KNB website and joined their Slack channel. One of the staff, Matt Jones, helped get all the attributes of 69957 datasets, extracted from their metadata files using their API. 
+# Get the most popular headers in KNB  
+Ciera suggested that looking for the most popular headers of all the datasets should be fun. I thought that would be interesting but had no idea where to start.   
+So I went to the KNB website and joined their Slack channel. One of the staff, Matt Jones, helped get all the attributes of 69957 datasets, extracted from their metadata files using their API. 
 
 ```{r, eval = FALSE}
 # load the package
@@ -100,6 +103,9 @@ attr_not_boring <-
   filter(most_pop, !str_detect(
                     Var1, "(year|date|time|day|site|month|location|station)"))
 ```
+
+
+We display it with a plot.  
 ```{r}
 pop6to20 <- slice(attr_not_boring, 1:20)
 ggplot(data = pop6to20, aes(x=reorder(Var1, Freq), y=Freq)) +
@@ -122,20 +128,48 @@ id <- dataset_w_pop[1, 2]
 ```
 
 
-
+Now we wanta to download all the data using their [API](https://github.com/DataONEorg/rdataone)  
 ```{r, eval = FALSE}
+# load the package
 library(XML)
+library(dataone)
+
+# get the node of this metadata using `dataOne` package
+locations <- resolve(cn, id)
+mnId <- locations$data[2, "nodeIdentifier"]
+mn <- getMNode(cn, mnId)
+
+# download the metadata file to find the data table
 metadata <- rawToChar(getObject(mn, id))
 doc = xmlRoot(xmlTreeParse(metadata, asText=TRUE, trim = TRUE, ignoreBlanks = TRUE))
+print(doc[1])
+tf <- tempfile()
+saveXML(doc, file="d1.xml")
 
-doc
-dataRaw <- getObject(mn, "knb/SHB001_021ADCP020R00_20010312.40.1")
+# now extract the node that has the data table's information
+node <- getNodeSet(doc, "//objectName")
+table_id <- xmlValue(node[[1]])
+```
+
+
+Right now there is something wrong with the KNB website so that we can't directly 
+https://search.dataone.org/view/doi:10.6085/AA/SHB001_021ADCP020R00_20010312.50.1
+```{r}
+# we can see that the ids have the pattern
+dataRaw <- getObject(mn, paste0("doi:10.6085/AA/", table_id))
 dataChar <- rawToChar(dataRaw)
 theData <- textConnection(dataChar)
 df <- read.csv(theData, stringsAsFactors=FALSE)
 write.csv(df, file = "~/Documents/knb-susquehanna-river-flow.csv")
-
-
 ```
+
+
+
+
 Now we are back to xml...  
 https://www.stat.berkeley.edu/~statcur/Workshop2/Presentations/XML.pdf
+```{r}
+dat <- read.csv(file = "../data/d1.csv", sep = " ", header = TRUE)
+```
+
+Finally downloaded one and the approximate total size should be 450GB
