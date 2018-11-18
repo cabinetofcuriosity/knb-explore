@@ -159,8 +159,8 @@ https://search.dataone.org/view/doi:10.6085/AA/SHB001_021ADCP020R00_20010312.50.
 dataRaw <- getObject(mn, paste0("doi:10.6085/AA/", table_id))
 dataChar <- rawToChar(dataRaw)
 theData <- textConnection(dataChar)
-df <- read.csv(theData, stringsAsFactors=FALSE)
-write.csv(df, file = "~/Documents/knb-susquehanna-river-flow.csv")
+df <- read.csv(theData, stringsAsFactors=FALSE, header = TRUE, sep = " ")
+write.csv(df, file = "../data/d11.csv")
 ```
 
 
@@ -168,8 +168,5 @@ write.csv(df, file = "~/Documents/knb-susquehanna-river-flow.csv")
 
 Now we are back to xml...  
 https://www.stat.berkeley.edu/~statcur/Workshop2/Presentations/XML.pdf
-```{r}
-dat <- read.csv(file = "../data/d1.csv", sep = " ", header = TRUE)
-```
 
 Finally downloaded one and the approximate total size should be 450GB
