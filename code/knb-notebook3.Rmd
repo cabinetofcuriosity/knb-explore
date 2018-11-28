@@ -128,7 +128,7 @@ id <- dataset_w_pop[1, 2]
 ```
 
 
-Now we wanta to download all the data using their [API](https://github.com/DataONEorg/rdataone)  
+Now we wanta to download all the data using their [API](https://github.com/DataONEorg/rdataone), with the help of an [XML tutorial](https://www.stat.berkeley.edu/~statcur/Workshop2/Presentations/XML.pdf)  
 ```{r, eval = FALSE}
 # load the package
 library(XML)
@@ -152,8 +152,7 @@ table_id <- xmlValue(node[[1]])
 ```
 
 
-Right now there is something wrong with the KNB website so that we can't directly 
-https://search.dataone.org/view/doi:10.6085/AA/SHB001_021ADCP020R00_20010312.50.1
+Right now, according to the KNB staff, there is something wrong with the website so we can't directly get the data from KNB. We need to do some trick. So going to DataOne website, we can see [this](https://search.dataone.org/view/doi:10.6085/AA/SHB001_021ADCP020R00_20010312.50.1) is exactly the same dataset. By inspecting the HTML code of the website, we found the ID for the data table is "doi:10.6085/AA/SHB001_021ADCP020R00_20010312.40.1". We see the IDs have the same pattern: "doi:10.6085/AA/" + unique ID(extracted from the metadata file). We can check by 
 ```{r}
 # we can see that the ids have the pattern
 dataRaw <- getObject(mn, paste0("doi:10.6085/AA/", table_id))
@@ -164,9 +163,5 @@ write.csv(df, file = "../data/d11.csv")
 ```
 
 
-
-
-Now we are back to xml...  
-https://www.stat.berkeley.edu/~statcur/Workshop2/Presentations/XML.pdf
 
 Finally downloaded one and the approximate total size should be 450GB
