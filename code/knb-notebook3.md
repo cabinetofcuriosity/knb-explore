@@ -132,7 +132,8 @@ id <- dataset_w_pop[1, 2]
 
 
 Now we wanta to download all the data using their [API](https://github.com/DataONEorg/rdataone).  
-Right now, according to the KNB staff, there is something wrong with the website so we can't directly get the data from KNB. We need to do some trick. So going to DataOne website, we can see [this](https://search.dataone.org/view/doi:10.6085/AA/SHB001_021ADCP020R00_20010312.50.1) is exactly the same dataset. By inspecting the HTML code of the website, we found the ID for the data table is "doi:10.6085/AA/SHB001_021ADCP020R00_20010312.40.1". We see the IDs have the same pattern: "doi:10.6085/AA/" + unique ID(extracted from the metadata file with the help of an [XML tutorial](https://www.stat.berkeley.edu/~statcur/Workshop2/Presentations/XML.pdf)).  
+Right now, according to the KNB staff, there is something wrong with the website so we can't directly get the data from KNB. We need to do some trick. So going to DataOne website, we can see [this](https://search.dataone.org/view/doi:10.6085/AA/SHB001_021ADCP020R00_20010312.50.1) is exactly the same dataset.  
+By inspecting the HTML code of the website, we found the ID for the data table is "doi:10.6085/AA/SHB001_021ADCP020R00_20010312.40.1". We see the IDs have the same pattern: "doi:10.6085/AA/" + unique ID(extracted from the metadata file with the help of an [XML tutorial](https://www.stat.berkeley.edu/~statcur/Workshop2/Presentations/XML.pdf)).  
 We can check later by comparing the total row numbers. 
 
 ```{r, eval = FALSE}
@@ -154,8 +155,7 @@ node <- getNodeSet(doc, "//objectName")
 table_id <- xmlValue(node[[1]])
 ```
 
-
-
+We put the data frame into a .csv file:  
 ```{r}
 # we can see that the ids have the pattern
 dataRaw <- getObject(mn, paste0("doi:10.6085/AA/", table_id))
@@ -166,19 +166,3 @@ write.csv(df, file = "../data/d11.csv")
 ```
 
 
-
-``` r
-library(XML)
-metadata <- rawToChar(getObject(mn, id))
-doc = xmlRoot(xmlTreeParse(metadata, asText=TRUE, trim = TRUE, ignoreBlanks = TRUE))
-
-doc
-dataRaw <- getObject(mn, "knb/SHB001_021ADCP020R00_20010312.40.1")
-dataChar <- rawToChar(dataRaw)
-theData <- textConnection(dataChar)
-df <- read.csv(theData, stringsAsFactors=FALSE)
-write.csv(df, file = "~/Documents/knb-susquehanna-river-flow.csv")
-```
-
-Now we are back to xml...
-<https://www.stat.berkeley.edu/~statcur/Workshop2/Presentations/XML.pdf>
