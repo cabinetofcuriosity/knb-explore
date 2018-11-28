@@ -144,16 +144,19 @@ We can check later by comparing the total row numbers.
 # load the package
 library(XML)
 library(dataone)
+
 # get the node of this metadata using `dataOne` package
 locations <- resolve(cn, id)
 mnId <- locations$data[2, "nodeIdentifier"]
 mn <- getMNode(cn, mnId)
+
 # download the metadata file to find the data table
 metadata <- rawToChar(getObject(mn, id))
 doc = xmlRoot(xmlTreeParse(metadata, asText=TRUE, trim = TRUE, ignoreBlanks = TRUE))
 print(doc[1])
 tf <- tempfile()
 saveXML(doc, file="d1.xml")
+
 # now extract the node that has the data table's information
 node <- getNodeSet(doc, "//objectName")
 table_id <- xmlValue(node[[1]])
