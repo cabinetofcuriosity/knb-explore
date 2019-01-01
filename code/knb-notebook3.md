@@ -173,3 +173,41 @@ write.csv(df, file = "../data/d11.csv")
 ```
 
 
+```{r, eval = FALSE}
+id <- dataset_w_pop[1, 3]
+  
+# get the node of this metadata using `dataOne` package
+locations <- resolve(cn, id)
+mnId <- locations$data[2, "nodeIdentifier"]
+mn <- getMNode(cn, mnId)
+
+
+downl <- function(i) {
+  id <- dataset_w_pop[i, 3]
+
+  # download the metadata file to find the data table
+  metadata <- rawToChar(getObject(mn, id))
+  doc = xmlRoot(xmlTreeParse(metadata, asText=TRUE, trim = TRUE, ignoreBlanks = TRUE))
+
+  # now extract the node that has the data table's information
+  node <- getNodeSet(doc, "//entityName")
+  table_id <- xmlValue(node[[1]])
+  
+  if (grepl("\\.(TXT|txt)", table_id)) {
+    table_id <- gsub("\\.(TXT|txt)", "", table_id)
+  }
+  
+  # we can see that the ids have the pattern
+  dataRaw <- getObject(mn, paste0("doi:10.6085/AA/", table_id))
+  dataChar <- rawToChar(dataRaw)
+  theData <- textConnection(dataChar)
+  df <- read.csv(theData, stringsAsFactors=FALSE, header = TRUE, sep = " ", row.names=NULL)
+  write.csv(df, file = paste0("../data/downloaded/d", i, ".csv"))
+  return(table_id)
+}
+
+sapply(39:nrow(dataset_w_pop), downl)
+
+```
+
+
