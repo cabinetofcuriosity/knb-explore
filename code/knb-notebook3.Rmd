@@ -7,7 +7,11 @@ output: github_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, fig.path = '../image/')
+library(dataone)
+library(XML)
+
 cn <- CNode("PROD")
+dataset_w_pop <- read.csv("../data/pop_ds.csv", stringsAsFactors = FALSE)
 ```
 
 # Get the most popular headers in KNB  
@@ -83,7 +87,7 @@ head(most_pop, 100)
 ```
 
 ```{r}
-most_pop <- read.csv("../data/knb-pop-attrs.csv", stringsAsFactors = FALSE)
+most_pop <- read.csv("../data/attributes/knb-pop-attrs.csv", stringsAsFactors = FALSE)
 pop_20 <- head(most_pop, 20)
 library(ggplot2)
 library(dplyr)
@@ -118,35 +122,49 @@ ggplot(data = pop6to20, aes(x=reorder(Var1, Freq), y=Freq)) +
 Let's extract the metafiles with common popular attributes. Now it seems that the datasets that have the first 12 "not boring popular" attributes in common come from the same cluster of datasets, since they have exactly the same attributes and attribute descriptions.
 
 ```{r}
-all_files <- read.csv("../data/knb-attrs.csv", stringsAsFactors = FALSE)
+all_files <- read.csv("../data/attributes/knb-attrs.csv", stringsAsFactors = FALSE)
+```
+```{r, eval = FALSE}
 pop_vars <- slice(attr_not_boring, 1:12)$Var1
 dataset_w_pop <- filter(all_files, grepl(pop_vars[1], all_files$attributeName))
 for (i in 2:length(pop_vars)) {
     dataset_w_pop <- filter(dataset_w_pop, grepl(pop_vars[i], dataset_w_pop$attributeName))
 }
-id <- dataset_w_pop[1, 2]
+write.csv(dataset_w_pop, file = "../data/pop_ds.csv")
+
+id <- dataset_w_pop[1, 3]
 ```
 
+```{r}
+dataset_w_pop <- read.csv("../data/pop_ds.csv", stringsAsFactors = FALSE)
+```
 
-Now we wanta to download all the data using their [API](https://github.com/DataONEorg/rdataone).  
+# Download all the selected datasets
+I want to do some analysis on these datasets.  
+So I download all the data using their [API](https://github.com/DataONEorg/rdataone) with their metadata files.  
+One metadata file shows:
+> This metadata record describes bottom-mounted ADCP data collected at Sand Hill Bluff, California, USA, by PISCO. Measurements were collected using an RDI 600 kHz Workhorse Sentinel ADCP beginning 2001-03-12.  The instrument depth was 020 meters, in an overall water depth of 021 meters (both relative to Mean Sea Level, MSL).  The instrument was programmed with a sampling interval of 2.0 minutes and a vertical resolution of 1 meter."
+
 Right now, according to the KNB staff, there is something wrong with the website so we can't directly get the data from KNB. We need to do some trick. So going to DataOne website, we can see [this](https://search.dataone.org/view/doi:10.6085/AA/SHB001_021ADCP020R00_20010312.50.1) is exactly the same dataset.  
 By inspecting the HTML code of the website, we found the ID for the data table is "doi:10.6085/AA/SHB001_021ADCP020R00_20010312.40.1". We see the IDs have the same pattern: "doi:10.6085/AA/" + unique ID(extracted from the metadata file with the help of an [XML tutorial](https://www.stat.berkeley.edu/~statcur/Workshop2/Presentations/XML.pdf)).  
 We can check later by comparing the total row numbers. 
-
 ```{r, eval = FALSE}
 # load the package
 library(XML)
 library(dataone)
+
 # get the node of this metadata using `dataOne` package
 locations <- resolve(cn, id)
 mnId <- locations$data[2, "nodeIdentifier"]
 mn <- getMNode(cn, mnId)
+
 # download the metadata file to find the data table
 metadata <- rawToChar(getObject(mn, id))
 doc = xmlRoot(xmlTreeParse(metadata, asText=TRUE, trim = TRUE, ignoreBlanks = TRUE))
 print(doc[1])
 tf <- tempfile()
 saveXML(doc, file="d1.xml")
+
 # now extract the node that has the data table's information
 node <- getNodeSet(doc, "//objectName")
 table_id <- xmlValue(node[[1]])
@@ -160,7 +178,45 @@ dataChar <- rawToChar(dataRaw)
 theData <- textConnection(dataChar)
 df <- read.csv(theData, stringsAsFactors=FALSE, header = TRUE, sep = " ")
 write.csv(df, file = "../data/d11.csv")
+
+
 ```
 
 
-Finally downloaded one and the approximate total size should be 450GB
+
+```{r, eval = FALSE}
+id <- dataset_w_pop[1, 3]
+  
+# get the node of this metadata using `dataOne` package
+locations <- resolve(cn, id)
+mnId <- locations$data[2, "nodeIdentifier"]
+mn <- getMNode(cn, mnId)
+
+
+downl <- function(i) {
+  id <- dataset_w_pop[i, 3]
+
+  # download the metadata file to find the data table
+  metadata <- rawToChar(getObject(mn, id))
+  doc = xmlRoot(xmlTreeParse(metadata, asText=TRUE, trim = TRUE, ignoreBlanks = TRUE))
+
+  # now extract the node that has the data table's information
+  node <- getNodeSet(doc, "//entityName")
+  table_id <- xmlValue(node[[1]])
+  
+  if (grepl("\\.(TXT|txt)", table_id)) {
+    table_id <- gsub("\\.(TXT|txt)", "", table_id)
+  }
+  
+  # we can see that the ids have the pattern
+  dataRaw <- getObject(mn, paste0("doi:10.6085/AA/", table_id))
+  dataChar <- rawToChar(dataRaw)
+  theData <- textConnection(dataChar)
+  df <- read.csv(theData, stringsAsFactors=FALSE, header = TRUE, sep = " ", row.names=NULL)
+  write.csv(df, file = paste0("../data/downloaded/d", i, ".csv"))
+  return(table_id)
+}
+
+sapply(39:nrow(dataset_w_pop), downl)
+
+```
