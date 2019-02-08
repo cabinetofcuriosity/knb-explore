@@ -217,6 +217,38 @@ downl <- function(i) {
   return(table_id)
 }
 
-sapply(39:nrow(dataset_w_pop), downl)
+sapply(1083:nrow(dataset_w_pop), downl)
 
 ```
+```{r}
+
+downl(654)
+
+  id <- dataset_w_pop[113, 3]
+
+  # download the metadata file to find the data table
+  metadata <- rawToChar(getObject(mn, id))
+  doc = xmlRoot(xmlTreeParse(metadata, asText=TRUE, trim = TRUE, ignoreBlanks = TRUE))
+
+  # now extract the node that has the data table's information
+  node <- getNodeSet(doc, "//entityName")
+  table_id <- xmlValue(node[[1]])
+  
+  if (grepl("\\.(TXT|txt)", table_id)) {
+    table_id <- gsub("\\.(TXT|txt)", "", table_id)
+  }
+  
+  # we can see that the ids have the pattern
+  dataRaw <- getObject(mn, paste0("doi:10.6085/AA/", table_id))
+  dataChar <- rawToChar(dataRaw)
+  theData <- textConnection(dataChar)
+  df <- read.csv(theData, stringsAsFactors=FALSE, header = TRUE, sep = " ", row.names=NULL)
+  write.csv(df, file = paste0("../data/downloaded/d", 114, ".csv"))
+  
+```
+
+There are a few files that don't match the pattern, so I have to manually find their table ID and download them. eg, 
+
+7, 8, 9, 15, 23, 28, 64, 77, 93, 105, 106, 110, 113, 121, 132, 133, 135, 186, 201, 223, 257, 301, 340, 345, 359, 360, 414, 418, 430, 503, 519, 537, 552, 562, 573, 580, 617, 653, 655, 673, 676, 688, 692, 694, 697, 701, 710, 727, 778, 786, 798, 814, 817, 836, 851, 863, 870, 878, 879, 885, 900, 912, 915, 927, 953, 991, 1003, 1015, 1082 
+
+can't be found -- newer version
