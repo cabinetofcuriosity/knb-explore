@@ -151,3 +151,63 @@ ggplot(data = d203, aes(x=X, y=upwards)) +
   geom_line(color = "lightblue") +
   theme_minimal()
 ```
+
+
+
+
+
+```{r}
+library(dataone)
+library(XML)
+
+id <- dataset_w_pop[1, 3]
+cn <- CNode("PROD")
+
+# get the node of this metadata using `dataOne` package
+locations <- resolve(cn, id)
+mnId <- locations$data[2, "nodeIdentifier"]
+mn <- getMNode(cn, mnId)
+```
+
+```{r}
+allLocation <- data.frame()
+for (i in 1:nrow(dataset_w_pop)) {
+  allLocation <- rbind(allLocation, getLocation(i))
+}
+  
+```
+
+```{r}
+allLocation
+```
+
+50 datasets took 2 mins
+
+```{r}
+getLocation <- function(i, loc) {
+  id <- dataset_w_pop[i, 3]
+
+  # download the metadata file to find the data table
+  metadata <- rawToChar(getObject(mn, id))
+  doc = xmlRoot(xmlTreeParse(metadata, asText=TRUE, trim = TRUE, ignoreBlanks = TRUE))
+
+  # now extract the node that has the data table's information
+  node <- getNodeSet(doc, "//boundingCoordinates")
+  curLoc <- head(xmlToDataFrame(node, stringsAsFactors = FALSE), 1)
+  west <- as.numeric(curLoc[1, 1])
+  east <- as.numeric(curLoc[1, 2])
+  north <- as.numeric(curLoc[1, 3])
+  south <- as.numeric(curLoc[1, 4])
+  
+  thisLoc <- data.frame(longitude = c((1/2)*(west + east)), latitude = c((1/2)*(north + south)), ID = c(id))
+  
+  return(thisLoc)
+}
+```
+
+```{r}
+head(xmlToDataFrame(node), 1)
+rbind(allLocation, head(xmlToDataFrame(node), 1))
+```
+
+
