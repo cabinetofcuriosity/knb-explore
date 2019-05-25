@@ -1,16 +1,12 @@
-R Notebook
+Location
 ================
 
 This document extracts location and date information from PISCO, species and sea star wasting syndrome datasets and compare them.
 
+
 ### description
 
 readme average description
-
-Location
-========
-
-We want to connect the sea stars data to PISCO data based on their locations.
 
 Sea Stars
 ---------
