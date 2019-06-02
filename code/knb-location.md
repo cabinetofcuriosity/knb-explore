@@ -163,13 +163,11 @@ downl_pis <- function(i) {
 ```
 
 ``` r
-get_temp <- function(spe_pis, spe_dt) {
-  spe_ind <- species_pis$species_ind
-  pis_ind <- species_pis$pis_ind
+get_temp <- function(spe_dt) {
+  pis_ind <- spe_dt$pis_ind
   spe_dt$mean_temp <- c()
   
-  for (i in 1:nrow(species_pis)) {
-    cur_spe <- spe_ind[i] # index of spe_dt 
+  for (i in 1:nrow(spe_dt)) {
     cur_pis <- pis_ind[i] # index of pisco datasets
     if (cur_pis == -1) {
       spe_dt$mean_temp[i] <- 999999.0
@@ -180,17 +178,24 @@ get_temp <- function(spe_pis, spe_dt) {
       cur_pis <- cur_pis + 1
     }
     
-    pisco_df <- downl_pis(cur_pis)
-    pisco_dt[cur_pis, ]$latitude, longitude
-    ### if you've downloaded all the datasets:
-    ### pisco_df <- read.csv(file = paste0("../data/d", cur_pis, ".csv"), stringsAsFactors = FALSE)
+    these_pis <- filter(allLocationNDate, 
+                        latitude == spe_dt$latitude[i], 
+                        longitude == spe_dt$longitude[i], 
+                        seanson = spe_dt$season_sequence[i], 
+                        year == spe_dt$marine_common_year[i])
+    all_temp <- c()
+    for (j in 1:nrow(these_pis)) {
+      pisco_df <- downl_pis(these_pis[j, ]$ID)
+      
+      ### if you've downloaded all the datasets:
+      ### pisco_df <- read.csv(file = paste0("../data/d", cur_pis, ".csv"), stringsAsFactors = FALSE)
     
-    # discard if temp == 9999.00, which is equivalent to NA for PISCO datasets
-    tem <- filter(pisco_df, date == spe_dt$survey_date[cur_spe], temp_c != 9999.00)
-    result <- rbind(result, average(tem))
+      # discard if temp == 9999.00, which is equivalent to NA for PISCO datasets
+      all_temp <- c(all_temp, filter(pisco_df, temp_c != 9999.00)$temp_c)
+    }
+    
+    spe_dt$mean_temp[i] <- mean(all_temp)
   }
-
-  
 }
 ```
 
