@@ -6,7 +6,7 @@ Database: [KNB](https://knb.ecoinformatics.org/)
 Contents:  
 
 notebook:
-- knb-notebook1.Rmd: downloading the API and understanding its usage
+- [knb-notebook1.md](https://github.com/cabinetofcuriosity/knb_explore/blob/master/code/knb-notebook1.md): downloading the API and understanding its usage
 - knb-notebook2.Rmd: exploring the database using their API
 - knb-notebook3.Rmd: find the most popular headers in the KNB database and download the datasets that have these headers. 
 
