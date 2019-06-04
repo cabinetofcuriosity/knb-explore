@@ -1,13 +1,13 @@
 Location
 ================
 
-Size and count data is seperated by season so I want to do the same thing to PISCO data.
+Size and count data is seperated by season so I want to do the same thing to PISCO data, putting a season for each row with the function `dataToNum` defined before.
 
 ``` r
 # first add a column to PISCO data
-allLocationNDate <- mutate(allLocationNDate, season = c(0), year = c(0))
-for (i in 1:nrow(allLocationNDate)) {
-  curDate <- (dateToNum(allLocationNDate$end[i]) + dateToNum(allLocationNDate$begin[i])) / 2
+allLocationNDateS <- mutate(allLocationNDate, season = c(0), year = c(0))
+for (i in 1:nrow(allLocationNDateS)) {
+  curDate <- (dateToNum(allLocationNDateS$end[i]) + dateToNum(allLocationNDateS$begin[i])) / 2
   curSeason <- curDate %% 1
   curYear <- curDate - curSeason
   # curDate <- dateToNum('0000-09-06')
@@ -21,34 +21,29 @@ for (i in 1:nrow(allLocationNDate)) {
   } else {
     rt <- 3 # Fall
   }
-  allLocationNDate$season[i] <- rt
-  allLocationNDate$year[i] <- curYear
+  allLocationNDateS$season[i] <- rt
+  allLocationNDateS$year[i] <- curYear
 }
 ```
 
 ``` r
-unique(allLocationNDate$year)
+write.csv(allLocationNDateS, '../data/PISCOwSeason.csv')
 ```
-
-    ##  [1] 2001 2005 2002 2004 2003 2006 2000 2007 2008 2009 1999 2010 1950 2011
-    ## [15] 1949   11
 
 ``` r
 seastarkat <- read.csv("../data/seastarkat_size_count_totals_download.csv", stringsAsFactors = FALSE)
-unique(seastarkat$state_province)
 ```
 
-We first examine the species data inside California and later to all the data.
+I first examine the species data inside California and later to all the data.
 
 ``` r
 seastarkat_ca <- seastarkat[seastarkat$state_province == 'California', ]
 seastarkat_ca_g <- seastarkat_ca %>% 
   group_by(season_sequence, marine_common_year, target_assemblage, latitude, longitude) %>%
   summarise(total_sum = sum(total))
-seastarkat_ca_g[1,]$season_sequence
 ```
 
-season\_sequence == 1
+For each size and count data entry, I find a nearest PISCO location(latitude and longitude), using the Euclidean distance, in the same season and year. If the minimum Euclidean distance is bigger than 1 or the seasons and the years do not match, I assume this size and count data entry doesn't have a corresponding PISCO dataset.
 
 ``` r
 nearPisWSeason <- function(i, sea_star_dt, pisco_dt) {
@@ -82,15 +77,167 @@ nearPisWSeason <- function(i, sea_star_dt, pisco_dt) {
 }
 ```
 
+Call the function defined above on size and count data to obtain the indicies of all corresponding PISCO datasets.
+
 ``` r
 ca_which_pis <- c()
 for (m in 1:nrow(seastarkat_ca_g)) {
   ca_which_pis <- c(ca_which_pis, nearPisWSeason(m, seastarkat_ca_g, allLocationNDate))
 }
-write.csv(ca_which_pis, '../data/scca_seastar_vs_pis.csv')
 ```
+
+Add a column of these indicies to size and count data frame and write the new data frame into a csv file.
 
 ``` r
 seastarkat_ca_g$pis_ind <- ca_which_pis
 write.csv(seastarkat_ca_g, '../data/scca_seastarka.csv')
+```
+
+We can see that more than half of size and count rows are discarded because of wrong season and year or wrong location and this can be shown with two plots below.
+
+``` r
+nrow(filter(seastarkat_ca_g, pis_ind == -1))
+```
+
+``` r
+#, season_sequence, marine_common_year
+ggplot() +
+  geom_point(data = filter(seastarkat_ca_g, pis_ind == -1), aes(x = latitude, y = longitude, color = "Discarded size and count")) +
+  geom_point(data = allLocationNDate, aes(x = latitude, y = longitude, color = "PISCO")) + 
+  theme_minimal() +
+  labs(title = "Locations of discarded size and count data entries", color = "Datasets\n") +
+  scale_colour_manual("", 
+                      breaks = c("Discarded size and count", "PISCO"),
+                      values = c("light green", "light blue")) +
+  ylim(-125, -115)
+```
+
+``` r
+ggplot() +
+  geom_point(data = filter(seastarkat_ca_g, pis_ind == -1), aes(x = season_sequence, y = marine_common_year, color = "Discarded size and count"), alpha = 0.1) +
+  geom_point(data = allLocationNDate, aes(x = season, y = year, color = "PISCO"), alpha = 0.1) + 
+  theme_minimal() +
+  labs(title = "Season and year of discarded size and count data entries", color = "Datasets\n") +
+  scale_colour_manual("", 
+                      breaks = c("Discarded size and count", "PISCO"),
+                      values = c("light green", "light blue")) +
+  ylim(1990, 2020)
+```
+
+Adding PISCO datasets with the same locations
+---------------------------------------------
+
+When I find a nearest PISCO location, I only considered one dataset with the closest location(latitude and longitude), restrained by the season and year. However, for each season, year and location, there should be multiple datasets. Thus I should modify the function of finding the nearest PISCO datasets and use matrix as my data structure.
+Also, since I've found that some data entries don't have a corresponding PISCO dataset, I can discard them. So only 421 rows of size and count data are useful for now.
+
+``` r
+sk_ca_filtered <- filter(seastarkat_ca_g, pis_ind != -1)
+nrow(sk_ca_filtered)
+```
+
+``` r
+needed_pis <- matrix(list(), nrow=421, ncol=1) # each row for each size and count data row
+  
+for (i in 1:nrow(sk_ca_filtered)) {
+  cur_pis <- sk_ca_filtered$pis_ind[i] # index of pisco datasets in allLocationNDateS
+  if (cur_pis == -1) {
+    spe_dt$mean_temp[i] <- 999999.0
+    next
+  }
+    
+  cur_pis_dt <- allLocationNDateS[cur_pis, ]
+  these_pis <- filter(allLocationNDateS, 
+                      latitude == cur_pis_dt$latitude, 
+                      longitude == cur_pis_dt$longitude, 
+                      season == cur_pis_dt$season, 
+                      year == cur_pis_dt$year)
+  needed_pis[[i, 1]] <- these_pis$ID
+}
+```
+
+Download PISCO datasets
+-----------------------
+
+``` r
+library(dataone)
+library(XML)
+cn <- CNode("PROD")
+
+downl_pis <- function(id) {
+  #id <- dataset_w_pop[i, 3]
+
+  # download the metadata file to find the data table
+  metadata <- rawToChar(getObject(mn, id))
+  doc = xmlRoot(xmlTreeParse(metadata, asText=TRUE, trim = TRUE, ignoreBlanks = TRUE))
+
+  # now extract the node that has the data table's information
+  node <- getNodeSet(doc, "//entityName")
+  table_id <- xmlValue(node[[1]])
+  
+  if (grepl("\\.(TXT|txt)", table_id)) {
+    table_id <- gsub("\\.(TXT|txt)", "", table_id)
+  }
+  
+  # we can see that the ids have the pattern
+  dataRaw <- getObject(mn, paste0("doi:10.6085/AA/", table_id))
+  dataChar <- rawToChar(dataRaw)
+  theData <- textConnection(dataChar)
+  df <- read.csv(theData, stringsAsFactors=FALSE, header = TRUE, sep = " ", row.names=NULL)
+  return(df)
+}
+```
+
+``` r
+get_temp <- function(spe_dt) {
+  pis_ind <- spe_dt$pis_ind
+  spe_dt$mean_temp <- c()
+  needed_pis <- c()
+  
+  for (i in 1:nrow(spe_dt)) {
+    cur_pis <- pis_ind[i] # index of pisco datasets in allLocationNDateS
+    if (cur_pis == -1) {
+      spe_dt$mean_temp[i] <- 999999.0
+      next
+    }
+    
+    #if (cur_pis >= 926) {
+    #  cur_pis <- cur_pis + 1
+    #}
+    
+    cur_pis_dt <- allLocationNDateS[cur_pis, ]
+    these_pis <- filter(allLocationNDateS, 
+                        latitude == cur_pis_dt$latitude, 
+                        longitude == cur_pis_dt$longitude, 
+                        season == cur_pis_dt$season, 
+                        year == cur_pis_dt$year)
+    all_temp <- c()
+    for (j in 1:nrow(these_pis)) {
+      if (these_pis[j, ]$ID %in% stored) {
+        
+      } else
+      pisco_df <- downl_pis(these_pis[j, ]$ID)
+      
+      ### if you've downloaded all the datasets:
+      ### pisco_df <- read.csv(file = paste0("../data/d", cur_pis, ".csv"), stringsAsFactors = FALSE)
+    
+      # discard if temp == 9999.00, which is equivalent to NA for PISCO datasets
+      all_temp <- c(all_temp, filter(pisco_df, temp_c != 9999.00)$temp_c)
+    }
+    
+    spe_dt$mean_temp[i] <- mean(all_temp)
+  }
+  return(spe_dt)
+}
+```
+
+``` r
+get_temp(seastarkat_ca_g)
+```
+
+``` r
+dt1_tem <- filter(dt1, date == '2002-11-03', temp_c != 9999.00)
+
+ggplot(data = dt1_tem, aes(x=X, y=temp_c)) +
+  geom_bar(stat="identity", fill = "lightblue") +
+  theme_minimal()
 ```
