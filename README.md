@@ -1,9 +1,9 @@
 # Basic Info
-Author: [Yuqing Lu](https://github.com/lynluyq)  
+__Author__: [Yuqing Lu](https://github.com/lynluyq)  
 
-Database: [KNB](https://knb.ecoinformatics.org/)  
+__Database__: [KNB](https://knb.ecoinformatics.org/)  
 
-Contents:  
+__Contents__:  
 
 notebook:
 - [knb-notebook1.md](https://github.com/cabinetofcuriosity/knb_explore/blob/master/code/knb-notebook1.md): downloading the API and understanding its usage
