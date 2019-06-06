@@ -12,7 +12,7 @@ __Contents__:
   - knb-notebook2.Rmd: explore the database using their API
   - knb-notebook3.Rmd: find the most popular headers in the KNB database and download the datasets that have these headers
   - knb-process.md: understand PISCO datasets and analyze their attributes
-  - knb-location.md: extract location and date information from PISCO, species and sea star wasting syndrome datasets and compare them
+  - knb-location.md: extract location and date information from PISCO, species and sea star wasting syndrome datasets and merge them
   - knb-sskat.md: merge species count and size data and PISCO datasets in order to find a relation between count and size of species and temperature
 
 - data: 
@@ -30,4 +30,10 @@ Sea star wasting syndrome data requested from [MARINe](https://marine.ucsc.edu/e
 This repo has the data, code and reports for my exploratary analysis on KNB, which is a website that aggregates ecology related datasets. 
 
 ## Accessing the data in KNB
-In order to access the data in KNB programmatically, I downloaded their API. Then following Ciera's suggestion, I was able to find the most popular headers in their database, under the help of the KNB staff. Playing with the headers, I decided to work on the datasets from [PISCO](http://www.piscoweb.org) and I need combine all the datasets first, which are around 200GB in total. 
+In order to access the data in KNB programmatically, I downloaded their API(notebook1). Then following Ciera's suggestion, in notebook3, I was able to find the most popular headers in their database, under the help of the KNB staff. Playing with the headers, I decided to work on the datasets from [PISCO](http://www.piscoweb.org) and I need combine all the datasets first, which are around 200GB in total. 
+
+## Understanding PISCO datasets
+In notebook3, I downloaded one PISCO dataset's xml file and data frame. From the metadata file I understood the general information of that one PISCO dataset, including the purpose, location, organization, attribute definition, etc. Then I made a few plots of the attributes for that dataset to see how each attribute varies over time. 
+
+## Merging species and PISCO data
+In location.md and sckat.md, I aim to merge species and PISCO data using location and time in order for a relation between species and ocean temperature.
