@@ -70,7 +70,7 @@ devtools::install_github("dkahle/ggmap", ref = "tidyup", force=TRUE)
 library("ggmap")
 
 # Set your API Key
-ggmap::register_google(key = "AIzaSyC9rkZpbIW8EhtAHjKEHrl7AX84ez0hvYs")
+ggmap::register_google(key = "YOUR KEY")
 ```
 
 We can see plenty of repeating latitudes and longitudes so we can extract the unique pairs of latitude and longitude, ie, unique locations and a survey date with an average percent_cover of that day.
