@@ -196,7 +196,7 @@ downl_pis <- function(i) {
   return(df)
 }
 ```
-Because downloading PISCO datasets is pretty slow, I want to reduce unneccessary downloading as mnuch as possible.  
+Because downloading PISCO datasets is pretty slow, I want to reduce unneccessary downloading as much as possible.  
 Ealier I have downloaded plenty of PISCO datasets stored in a hard drive, from the 1st to the 1260th except for some of them, so the indicies of already dowloaded PISCO datasets are:
 ```{r, eval=FALSE}
 dlded_pis <- (1:1260)[!(1:1260) %in% c(7, 8, 9, 15, 23, 28, 64, 77, 93, 105, 106, 110, 113, 121, 132, 133, 135, 186, 201, 223, 257, 301, 340, 345, 359, 360, 414, 418, 430, 503, 519, 537, 552, 562, 573, 580, 617, 653, 655, 673, 676, 688, 692, 694, 697, 701, 710, 727, 778, 786, 798, 814, 817, 836, 851, 863, 870, 878, 879, 885, 900, 912, 915, 927, 953, 991, 1003, 1015, 1082)]
