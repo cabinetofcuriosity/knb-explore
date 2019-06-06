@@ -7,23 +7,24 @@ __Language__: R
 
 __Contents__:  
 
-notebook:
-- [knb-notebook1.md](https://github.com/cabinetofcuriosity/knb_explore/blob/master/code/knb-notebook1.md): downloading the API and understanding its usage
-- knb-notebook2.Rmd: exploring the database using their API
-- knb-notebook3.Rmd: find the most popular headers in the KNB database and download the datasets that have these headers
-- knb-process.md: understanding PISCO datasets and analyzing their attributes
-- knb-sskat.md: species count and size vs PISCO
+- notebooks:
+  - [knb-notebook1.md](https://github.com/cabinetofcuriosity/knb_explore/blob/master/code/knb-notebook1.md): downloading the API and understanding its usage
+  - knb-notebook2.Rmd: explore the database using their API
+  - knb-notebook3.Rmd: find the most popular headers in the KNB database and download the datasets that have these headers
+  - knb-process.md: understand PISCO datasets and analyze their attributes
+  - knb-location.md: extract location and date information from PISCO, species and sea star wasting syndrome datasets and compare them
+  - knb-sskat.md: merge species count and size data and PISCO datasets in order to find a relation between count and size of species and temperature
 
-data: 
-- [knb-attrs.csv](https://github.com/cabinetofcuriosity/knb_explore/blob/master/data/knb-attrs.csv):  
+- data: 
+  - [knb-attrs.csv](https://github.com/cabinetofcuriosity/knb_explore/blob/master/data/knb-attrs.csv):  
 Extracted from the KNB website, around 700,000 rows. Each row contains information of an individual dataset that has header information in its metadata file.  
-- [knb-pop-attrs.csv](https://github.com/cabinetofcuriosity/knb_explore/blob/master/data/knb-pop-attrs.csv):  
+  - [knb-pop-attrs.csv](https://github.com/cabinetofcuriosity/knb_explore/blob/master/data/knb-pop-attrs.csv):  
 Common headers of the datasets, ordered by their frequencies.
-- [seastarkat_size_count_totals_download.csv](https://github.com/cabinetofcuriosity/knb_explore/blob/master/data/seastarkat_size_count_totals_download.csv):  
+  - [seastarkat_size_count_totals_download.csv](https://github.com/cabinetofcuriosity/knb_explore/blob/master/data/seastarkat_size_count_totals_download.csv):  
 Species count and size data (sea stars and katharina only) requested from [MARINe](https://marine.ucsc.edu/explore-the-data/contact/index.html).
-- [sswd_sea_star_observations_2019_0411.csv](https://github.com/cabinetofcuriosity/knb_explore/blob/master/data/sswd_sea_star_observations_2019_0411.csv):  
+  - [sswd_sea_star_observations_2019_0411.csv](https://github.com/cabinetofcuriosity/knb_explore/blob/master/data/sswd_sea_star_observations_2019_0411.csv):  
 Sea star wasting syndrome data requested from [MARINe](https://marine.ucsc.edu/explore-the-data/contact/index.html).
-- downloaded csv files: two large to show online
+  - downloaded csv files: two large to show online
 
 # Exploring KNB
 This repo has the data, code and reports for my exploratary analysis on KNB, which is a website that aggregates ecology related datasets. 
