@@ -116,7 +116,7 @@ ggplot() +
 
     ## Warning: Removed 7 rows containing missing values (geom_point).
 
-![](knb-seak_files/figure-markdown_github/unnamed-chunk-9-1.png)
+![](../image/scsskat-1.png)
 
 ``` r
 ggplot() +
@@ -132,7 +132,7 @@ ggplot() +
 
     ## Warning: Removed 12 rows containing missing values (geom_point).
 
-![](knb-seak_files/figure-markdown_github/unnamed-chunk-10-1.png)
+![](../image/scsskat-2.png)
 
 
 ## Adding PISCO datasets with the same locations  
