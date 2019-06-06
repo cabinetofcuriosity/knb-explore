@@ -134,6 +134,43 @@ ggplot() +
 
 ![](knb-seak_files/figure-markdown_github/unnamed-chunk-10-1.png)
 
+
+## Adding PISCO datasets with the same locations  
+When I find a nearest PISCO location, I only considered one dataset with the closest location(latitude and longitude), restrained by the season and year. However, for each season, year and location, there should be multiple datasets. Thus I should modify the function of finding the nearest PISCO datasets and use matrix as my data structure.  
+Also, since I've found that some data entries don't have a corresponding PISCO dataset, I can discard them. So only 421 rows of size and count data are useful for now.
+```{r, eval=FALSE}
+sk_ca_filtered <- filter(seastarkat_ca_g, pis_ind != -1)
+nrow(sk_ca_filtered)
+```
+
+
+```{r, eval=FALSE}
+needed_pisID <- matrix(list(), nrow=421, ncol=1) # each row for each size and count data row
+needed_pisIND <- matrix(list(), nrow=421, ncol=1)
+for (i in 1:nrow(sk_ca_filtered)) {
+  cur_pis <- sk_ca_filtered$pis_ind[i] # index of the ith pisco dataset in allLocationNDateS
+  if (cur_pis == -1) {
+    spe_dt$mean_temp[i] <- 999999.0
+    next
+  }
+    
+  cur_pis_dt <- allLocationNDateS[cur_pis, ]
+  these_pis <- filter(allLocationNDateS, 
+                      latitude == cur_pis_dt$latitude, 
+                      longitude == cur_pis_dt$longitude, 
+                      season == cur_pis_dt$season, 
+                      year == cur_pis_dt$year)
+  needed_pisID[[i, 1]] <- these_pis$ID
+  needed_pisIND[[i, 1]] <- these_pis$X
+}
+```
+
+What is the maximum number of corresponding PISCO datasets for each row in `needed_pis`? 
+```{r}
+max(sapply(needed_pis, function(row) {length(row)}))
+```
+
+
 Download PISCO datasets
 -----------------------
 
@@ -161,41 +198,43 @@ downl_pis <- function(i) {
   return(df)
 }
 ```
-
-``` r
-get_temp <- function(spe_dt) {
-  pis_ind <- spe_dt$pis_ind
-  spe_dt$mean_temp <- c()
-  
-  for (i in 1:nrow(spe_dt)) {
-    cur_pis <- pis_ind[i] # index of pisco datasets
-    if (cur_pis == -1) {
-      spe_dt$mean_temp[i] <- 999999.0
-      next
-    }
-    
-    if (cur_pis >= 926) {
-      cur_pis <- cur_pis + 1
-    }
-    
-    these_pis <- filter(allLocationNDate, 
-                        latitude == spe_dt$latitude[i], 
-                        longitude == spe_dt$longitude[i], 
-                        seanson = spe_dt$season_sequence[i], 
-                        year == spe_dt$marine_common_year[i])
-    all_temp <- c()
-    for (j in 1:nrow(these_pis)) {
-      pisco_df <- downl_pis(these_pis[j, ]$ID)
-      
-      ### if you've downloaded all the datasets:
-      ### pisco_df <- read.csv(file = paste0("../data/d", cur_pis, ".csv"), stringsAsFactors = FALSE)
-    
-      # discard if temp == 9999.00, which is equivalent to NA for PISCO datasets
-      all_temp <- c(all_temp, filter(pisco_df, temp_c != 9999.00)$temp_c)
-    }
-    
-    spe_dt$mean_temp[i] <- mean(all_temp)
+Because downloading PISCO datasets is pretty slow, I want to reduce unneccessary downloading as mnuch as possible.  
+Ealier I have downloaded plenty of PISCO datasets stored in a hard drive, from the 1st to the 1260th except for some of them, so the indicies of already dowloaded PISCO datasets are:
+```{r, eval=FALSE}
+dlded_pis <- (1:1260)[!(1:1260) %in% c(7, 8, 9, 15, 23, 28, 64, 77, 93, 105, 106, 110, 113, 121, 132, 133, 135, 186, 201, 223, 257, 301, 340, 345, 359, 360, 414, 418, 430, 503, 519, 537, 552, 562, 573, 580, 617, 653, 655, 673, 676, 688, 692, 694, 697, 701, 710, 727, 778, 786, 798, 814, 817, 836, 851, 863, 870, 878, 879, 885, 900, 912, 915, 927, 953, 991, 1003, 1015, 1082)]
+```
+Here I define a function to obtain temperature information of one PISCO dataset such that I only download one PISCO dataset once, storing already downloaded datasets.
+```{r, eval=FALSE}
+# returns temperature info of cur_pis
+down_pis_temp <- function(cur_pis) {
+  ### if you've downloaded this dataset
+  if (cur_pis %in% dlded_pis) { 
+    pisco_df <- read.csv(file = paste0("../data/downloaded/d", cur_pis, ".csv"), stringsAsFactors = FALSE)
+  } else {
+    cur_pisID <- needed_pisID[[i, 1]][j]
+    pisco_df <- downl_pis(cur_pisID)
+    write.csv(pisco_df, file = paste0("../data/downloaded/d", cur_pis, ".csv"))
+    dlded_pis <- c(dlded_pis, cur_pis)
   }
+  # discard if temp == 9999.00, which is equivalent to NA for PISCO datasets
+  return(filter(pisco_df, temp_c != 9999.00)$temp_c)
+}
+```
+
+```{r}
+seastarkat_ca_g$mean_temp <- c(9999.0)
+  
+for (i in 1:nrow(needed_pisID)) {
+  all_temp <- c()
+  # indicies of needed pisco datasets in allLocationNDateS
+  these_pis <- needed_pisIND[[i, 1]]
+  for (j in 1:length(these_pis)) {
+    tryCatch(all_temp <- c(all_temp, down_pis_temp(these_pis[j])), 
+             error = function(e) {print(paste("row", i, "PISCO", j, "invalid"));
+                                  NaN})
+}
+    
+  seastarkat_ca_g$mean_temp[i] <- mean(all_temp)
 }
 ```
 
