@@ -1,13 +1,13 @@
-Location
+Count and size vs PISCO
 ================
 
 Size and count data is seperated by season so I want to do the same thing to PISCO data, putting a season for each row with the function `dataToNum` defined before.
 
 ``` r
 # first add a column to PISCO data
-allLocationNDate <- mutate(allLocationNDate, season = c(0), year = c(0))
-for (i in 1:nrow(allLocationNDate)) {
-  curDate <- (dateToNum(allLocationNDate$end[i]) + dateToNum(allLocationNDate$begin[i])) / 2
+allLocationNDateS <- mutate(allLocationNDate, season = c(0), year = c(0))
+for (i in 1:nrow(allLocationNDateS)) {
+  curDate <- (dateToNum(allLocationNDateS$end[i]) + dateToNum(allLocationNDateS$begin[i])) / 2
   curSeason <- curDate %% 1
   curYear <- curDate - curSeason
   # curDate <- dateToNum('0000-09-06')
@@ -21,13 +21,13 @@ for (i in 1:nrow(allLocationNDate)) {
   } else {
     rt <- 3 # Fall
   }
-  allLocationNDate$season[i] <- rt
-  allLocationNDate$year[i] <- curYear
+  allLocationNDateS$season[i] <- rt
+  allLocationNDateS$year[i] <- curYear
 }
 ```
 
 ``` r
-write.csv(allLocationNDate, '../data/PISCOwSeason.csv')
+write.csv(allLocationNDateS, '../data/PISCOwSeason.csv')
 ```
 
 ``` r
@@ -136,24 +136,18 @@ ggplot() +
 
 
 ## Adding PISCO datasets with the same locations  
-When I find a nearest PISCO location, I only considered one dataset with the closest location(latitude and longitude), restrained by the season and year. However, for each season, year and location, there should be multiple datasets. Thus I should modify the function of finding the nearest PISCO datasets and use matrix as my data structure.  
+When I find a nearest PISCO location, I only considered one dataset with the closest location(latitude and longitude), restrained by the season and year. However, for each season, year and location, there should be multiple datasets. Thus I should find these datasets and store them in a matrix.  
 Also, since I've found that some data entries don't have a corresponding PISCO dataset, I can discard them. So only 421 rows of size and count data are useful for now.
 ```{r, eval=FALSE}
 sk_ca_filtered <- filter(seastarkat_ca_g, pis_ind != -1)
 nrow(sk_ca_filtered)
 ```
-
-
+Define a matrix and put all related PISCO datasets for each row into the matrix. 
 ```{r, eval=FALSE}
 needed_pisID <- matrix(list(), nrow=421, ncol=1) # each row for each size and count data row
 needed_pisIND <- matrix(list(), nrow=421, ncol=1)
 for (i in 1:nrow(sk_ca_filtered)) {
   cur_pis <- sk_ca_filtered$pis_ind[i] # index of the ith pisco dataset in allLocationNDateS
-  if (cur_pis == -1) {
-    spe_dt$mean_temp[i] <- 999999.0
-    next
-  }
-    
   cur_pis_dt <- allLocationNDateS[cur_pis, ]
   these_pis <- filter(allLocationNDateS, 
                       latitude == cur_pis_dt$latitude, 
@@ -175,6 +169,10 @@ Download PISCO datasets
 -----------------------
 
 ``` r
+library(dataone)
+library(XML)
+cn <- CNode("PROD")
+
 downl_pis <- function(i) {
   id <- dataset_w_pop[i, 3]
 
@@ -220,7 +218,7 @@ down_pis_temp <- function(cur_pis) {
   return(filter(pisco_df, temp_c != 9999.00)$temp_c)
 }
 ```
-
+Initialize the mean_temp column with a huge unrealistic value so that it works as `NA`. For each row of size and count data frame, use `try` to obtain the temperature information from the related PISCO datasets and print error information.  
 ```{r}
 seastarkat_ca_g$mean_temp <- c(9999.0)
   
