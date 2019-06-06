@@ -142,7 +142,7 @@ Also, since I've found that some data entries don't have a corresponding PISCO d
 sk_ca_filtered <- filter(seastarkat_ca_g, pis_ind != -1)
 nrow(sk_ca_filtered)
 ```
-Define a matrix and put all related PISCO datasets for each row into the matrix. 
+Define two matricies and put all related PISCO datasets for each row into the matricies, one for IDs, the other for the row indicies.
 ```{r, eval=FALSE}
 needed_pisID <- matrix(list(), nrow=421, ncol=1) # each row for each size and count data row
 needed_pisIND <- matrix(list(), nrow=421, ncol=1)
