@@ -15,16 +15,22 @@ __Contents__:
   - knb-location.md: extract location and date information from PISCO, species and sea star wasting syndrome datasets and merge them
   - knb-sskat.md: merge species count and size data and PISCO datasets in order to find a relation between count and size of species and temperature
 
-- data: 
-  - [knb-attrs.csv](https://github.com/cabinetofcuriosity/knb_explore/blob/master/data/knb-attrs.csv):  
-Extracted from the KNB website, around 700,000 rows. Each row contains information of an individual dataset that has header information in its metadata file.  
-  - [knb-pop-attrs.csv](https://github.com/cabinetofcuriosity/knb_explore/blob/master/data/knb-pop-attrs.csv):  
-Common headers of the datasets, ordered by their frequencies.
-  - [seastarkat_size_count_totals_download.csv](https://github.com/cabinetofcuriosity/knb_explore/blob/master/data/seastarkat_size_count_totals_download.csv):  
+- data:
+  1. generated:
+    - [knb-attrs.csv](https://github.com/cabinetofcuriosity/knb_explore/blob/master/data/knb-attrs.csv):  
+    Extracted from the KNB website, around 700,000 rows. Each row contains information of an individual dataset that has header information in its metadata file.  
+    - [knb-pop-attrs.csv](https://github.com/cabinetofcuriosity/knb_explore/blob/master/data/knb-pop-attrs.csv):  
+    Common headers of the datasets, ordered by their frequencies.
+    - [pisco-locations-dates.csv]():  
+    Group PISCO datasets by location and date.
+    - [PISCOwSeason.csv]():  
+    Add season column to PISCO location and date datasets.
+  2. downloaded:
+    - [seastarkat_size_count_totals_download.csv](https://github.com/cabinetofcuriosity/knb_explore/blob/master/data/seastarkat_size_count_totals_download.csv):  
 Species count and size data (sea stars and katharina only) requested from [MARINe](https://marine.ucsc.edu/explore-the-data/contact/index.html).
-  - [sswd_sea_star_observations_2019_0411.csv](https://github.com/cabinetofcuriosity/knb_explore/blob/master/data/sswd_sea_star_observations_2019_0411.csv):  
+    - [sswd_sea_star_observations_2019_0411.csv](https://github.com/cabinetofcuriosity/knb_explore/blob/master/data/sswd_sea_star_observations_2019_0411.csv):  
 Sea star wasting syndrome data requested from [MARINe](https://marine.ucsc.edu/explore-the-data/contact/index.html).
-  - downloaded csv files: two large to show online
+    - downloaded PISCO csv files: two large to show online; stored in a hard drive
 
 # Exploring KNB
 This repo has the data, code and reports for my exploratary analysis on KNB, which is a website that aggregates ecology related datasets. 
