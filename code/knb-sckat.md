@@ -296,7 +296,9 @@ scale_colour_manual("",
                     values = c("light green", "light blue")) 
 ```
 
-![](knb-sckat_files/figure-markdown_githubunnamed-chunk-21-1.png) Notice that the sum is a lot larger than temperature so I divide temperature by 20 in order for a clearer trend.
+![](knb-sckat_files/figure-markdown_githubunnamed-chunk-21-1.png) 
+
+Notice that the sum is a lot larger than temperature so I divide temperature by 20 in order for a clearer trend.
 
 ``` r
 ggplot() +
@@ -310,7 +312,9 @@ ggplot() +
   annotate("text", x = cur_df$ind, y = rep(1:2, len = length(cur_df$ind)), label = cur_df$marine_common_year)
 ```
 
-![](knb-sckat_files/figure-markdown_githubunnamed-chunk-22-1.png) For a specific season in one year, I plot a map with species count information, using `ggmap`.
+![](knb-sckat_files/figure-markdown_githubunnamed-chunk-22-1.png) 
+
+For a specific season in one year, I plot a map with species count information, using `ggmap`.
 Download `ggmap`:
 
 ``` r
@@ -367,7 +371,9 @@ ggmap(myMap) +
 
     ## Warning: Removed 21 rows containing missing values (geom_point).
 
-![](knb-sckat_files/figure-markdown_githubunnamed-chunk-25-1.png) The locations are out of map range so I should enlarge the map range.
+![](knb-sckat_files/figure-markdown_githubunnamed-chunk-25-1.png) 
+
+The locations are out of map range so I should enlarge the map range.
 
 ``` r
 myMap <- get_map(location = myLocation, source = "stamen", maptype = "watercolor", zoom = 6)
