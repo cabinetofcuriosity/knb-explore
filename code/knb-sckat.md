@@ -59,7 +59,7 @@ seastarkat_ca_g <- seastarkat_ca %>%
   group_by(season_sequence, marine_common_year, target_assemblage, latitude, longitude) %>%
   summarise(total_sum = sum(total))
 ```
-
+  
 For each size and count data entry, I find a nearest PISCO location(latitude and longitude), using the Euclidean distance, in the same season and year. If the minimum Euclidean distance is bigger than 1 or the seasons and the years do not match, I assume this size and count data entry doesn't have a corresponding PISCO dataset.
 
 ``` r
@@ -245,7 +245,7 @@ down_pis_temp <- function(cur_pis) {
   return(filter(pisco_df, temp_c != 9999.00)$temp_c)
 }
 ```
-
+  
 Initialize the mean\_temp column with a huge unrealistic value so that it works as `NA`.
 For each row of size and count data frame, use `tryCatch` to obtain the temperature information from the related PISCO datasets and print error information.
 
@@ -266,7 +266,7 @@ for (i in 280:nrow(needed_pisID)) {
 }
 write.csv(sk_ca_filtered, file = paste0("../data/seastarkat_ca_temp1.csv"))
 ```
-
+  
 I want to make a plot of water temperature for each location in time order, so I first extract the unique locations and store them in a data frame. We can tell there are 27 unique locations, hence I will make 27 plots.
 
 ``` r
@@ -275,7 +275,7 @@ uni_loc_sk <- sk_ca_filtered %>%
   group_by(longitude, latitude) %>%
   count()
 ```
-
+  
 For each location, I extract its temperature data from the original data frame. Take the first location for example:
 
 ``` r
