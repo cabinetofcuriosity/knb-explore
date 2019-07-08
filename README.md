@@ -26,10 +26,12 @@ __Contents__:
     - [PISCOwSeason.csv]():  
     Add season column to PISCO location and date datasets.
   2. downloaded:
-    - [seastarkat_size_count_totals_download.csv](https://github.com/cabinetofcuriosity/knb_explore/blob/master/data/seastarkat_size_count_totals_download.csv):  
-Species count and size data (sea stars and katharina only) requested from [MARINe](https://marine.ucsc.edu/explore-the-data/contact/index.html).
-    - [sswd_sea_star_observations_2019_0411.csv](https://github.com/cabinetofcuriosity/knb_explore/blob/master/data/sswd_sea_star_observations_2019_0411.csv):  
-Sea star wasting syndrome data requested from [MARINe](https://marine.ucsc.edu/explore-the-data/contact/index.html).
+    - [seastarkat_size_count_totals_download.csv](https://github.com/cabinetofcuriosity/knb_explore/blob/master/data/seastarkat_size_count_totals_download.csv):
+    Species count and size data (sea stars and katharina only) requested from [MARINe](https://marine.ucsc.edu/explore-the-data/contact/index.html).
+    - [sswd_sea_star_observations_2019_0411.csv](https://github.com/cabinetofcuriosity/knb_explore/blob/master/data/sswd_sea_star_observations_2019_0411.csv):
+    Sea star wasting syndrome data requested from [MARINe](https://marine.ucsc.edu/explore-the-data/contact/index.html).
+    - [phototranraw_download.csv]():
+    requested from [MARINe](https://marine.ucsc.edu/explore-the-data/contact/index.html).
     - downloaded PISCO csv files: two large to show online; stored in a hard drive
 
 # Exploring KNB
