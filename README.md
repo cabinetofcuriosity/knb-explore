@@ -25,6 +25,9 @@ __Contents__:
     Group PISCO datasets by location and date.
     - [PISCOwSeason.csv]():  
     Add season column to PISCO location and date datasets.
+    - [ca_sea_star_vs_pisco.csv]
+    - []
+    - [pop_ds.csv]
   2. downloaded:
     - [seastarkat_size_count_totals_download.csv](https://github.com/cabinetofcuriosity/knb_explore/blob/master/data/seastarkat_size_count_totals_download.csv):
     Species count and size data (sea stars and katharina only) requested from [MARINe](https://marine.ucsc.edu/explore-the-data/contact/index.html).
