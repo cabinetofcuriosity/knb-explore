@@ -9,11 +9,11 @@ __Contents__:
 
 - notebooks:
   - [knb-notebook1.md](https://github.com/cabinetofcuriosity/knb_explore/blob/master/code/knb-notebook1.md): downloading the API and understanding its usage
-  - knb-notebook2.Rmd: explore the database using their API
-  - knb-notebook3.Rmd: find the most popular headers in the KNB database and download the datasets that have these headers
-  - knb-process.md: understand PISCO datasets and analyze their attributes
-  - knb-location.md: extract location and date information from PISCO, species and sea star wasting syndrome datasets and merge them
-  - knb-sskat.md: merge species count and size data and PISCO datasets in order to find a relation between count and size of species and temperature
+  - [knb-notebook2.md](https://github.com/cabinetofcuriosity/knb_explore/blob/master/code/knb-notebook2.md): explore the database using their API
+  - [knb-notebook3.md](https://github.com/cabinetofcuriosity/knb_explore/blob/master/code/knb-notebook3.md): find the most popular headers in the KNB database and download the datasets that have these headers
+  - [knb-process.md](https://github.com/cabinetofcuriosity/knb_explore/blob/master/code/knb-process.md): understand PISCO datasets and analyze their attributes
+  - [knb-location.md](https://github.com/cabinetofcuriosity/knb_explore/blob/master/code/knb-location.md): extract location and date information from PISCO, species and sea star wasting syndrome datasets and merge them
+  - [knb-sckat.md](https://github.com/cabinetofcuriosity/knb_explore/blob/master/code/knb-sckat.md): merge species count and size data and PISCO datasets in order to find a relation between count and size of species and temperature
 
 - data:
   1. generated:
