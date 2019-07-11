@@ -2,22 +2,20 @@
 title: "Location"
 output: github_document
 ---
-This document extracts location and date information from PISCO, species and sea star wasting syndrome datasets and compare them. 
+This document extracts location and date information from PISCO, species and sea star wasting syndrome datasets and tries to merge them. 
 
-```{r setup, include=FALSE}
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.path = 'knb-location_files/figure-markdown_github/')
 d203 <- read.csv("../data/d203.csv", stringsAsFactors = FALSE)
 dataset_w_pop <- read.csv("../data/pop_ds.csv", stringsAsFactors = FALSE)
-allLocationNDate <- read.csv("../data/pisco-locations-dates.csv", stringsAsFactors = FALSE)
-ca_which_pis <- read.csv("../data/ca_sea_star_vs_pisco.csv", stringsAsFactors = FALSE)
+allLocationNDate <- read.csv("../data/generated/pisco-locations-dates.csv", stringsAsFactors = FALSE)
 ```
-
 
 ```{r}
 # Load some packages and import some data frames
 library(ggplot2)
 library(dplyr)
 ```
-
 
 ## Photo plots
 
@@ -26,72 +24,26 @@ Plots are photographed in the field, and are scored for percent cover using a gr
 
 So first we get the [photo plots data](https://www.eeb.ucsc.edu/pacificrockyintertidal/explore-the-data/index.html). We can see the data is inside four states.
 
-```{r, eval=FALSE}
-sea_stars <- read.csv("../data/phototranraw_download.csv", stringsAsFactors = FALSE)
+```{r}
+sea_stars <- read.csv("../data/downloaded/phototranraw_download.csv", stringsAsFactors = FALSE)
 unique(sea_stars$state_province)
 ```
 
 We first examine the species data inside California and later to all the data.
-```{r, eval=FALSE}
+```{r}
 sea_stars_ca <- sea_stars[sea_stars$state_province == 'California', ]
 # add ids to represent each row
 sea_stars_ca <- mutate(sea_stars_ca, id = 1:nrow(sea_stars_ca))
-head(sea_stars_ca, 100)
-colnames(sea_stars_ca)
-dim(sea_stars_ca)
-
-sea_stars_ca %>%
-  group_by(target_assemblage, marine_common_year) %>%
-  count()
-
-sea_stars_ca %>%
-  group_by(plot_code, marine_site_name) %>%
-  count()
-
-### Mapping species onto ggmap
-### Somehow looking at temperature and species distribution. Maybe add the temperature on the map as a color?
-
-## Subset by year first.
-## plot each species by plot code and site name --- dots to line shape --- then with pisco ---
-
-sea_stars_ca %>%
-  filter(marine_site_name == "Stairs", plot_code == 1, target_assemblage == "endocladia", marine_common_year == 2002) %>%
-  ggplot(., aes(survey_date, percent_cover, color = target_assemblage)) +
-  geom_point() +
-  theme_bw()
-
-```
-
-```{r, eval=FALSE}
-if(!requireNamespace("devtools")) install.packages("devtools")
-devtools::install_github("dkahle/ggmap", ref = "tidyup", force=TRUE)
-
-# Load ggmap
-library("ggmap")
-
-# Set your API Key
-ggmap::register_google(key = "YOUR KEY")
+head(sea_stars_ca, 10)
 ```
 
 We can see plenty of repeating latitudes and longitudes so we can extract the unique pairs of latitude and longitude, ie, unique locations and a survey date with an average percent_cover of that day.
-```{r, eval=FALSE}
+```{r}
 ca_unique_ld <- sea_stars_ca %>% 
   group_by(longitude, latitude, survey_date, target_assemblage) %>%
   summarise(mean_percent = mean(percent_cover))
 
-sea_stars_ca %>% 
-  group_by(longitude, latitude, survey_date, target_assemblage) %>%
-  summarise(mean_percent = mean(percent_cover)) %>%
-  ggplot(., aes(survey_date, mean_percent)) +
-  geom_point()
-
-ca_unique_ld
-```
-
-
-```{r, eval=FALSE}
-unique(sea_stars_ca[, 'target_assemblage'])
-unique(sea_stars_ca[, 'mpa_region'])
+head(ca_unique_ld, 10)
 ```
 
 ## PISCO
@@ -105,7 +57,7 @@ cn <- CNode("PROD")
 
 # get the node of this metadata using `dataOne` package
 locations <- resolve(cn, id)
-mnId <- locations$data[2, "nodeIdentifier"]
+mnId <- locations$data[1, "nodeIdentifier"]
 mn <- getMNode(cn, mnId)
 ```
 
@@ -169,7 +121,6 @@ Define a function that takes in index `i`, sea stars data `sea_star_dt` and PISC
 head(allLocationNDate, 10)
 ```
 
-
 Since there are begin and end dates in PISCO datasets, we want to transform the dates into numbers so that we can compare the dates and determine if a data entry in the sea star dataset can find a corresponding dataset in PISCO ones. 
 Now we define a function to do so, using method found on [stackoverflow](https://stackoverflow.com/a/8215581/10733819)
 ```{r}
@@ -181,7 +132,7 @@ dateToNum <- function(date) {
   return(rt)
 }
 ```
-
+Two examples of this function:
 ```{r}
 dateToNum('0000-02-29')
 dateToNum('2008-02-29')
@@ -221,7 +172,7 @@ nearPisWDate <- function(i, sea_star_dt, pisco_dt) {
   return(which_pis)
 }
 ```
-
+Find corresponding PISCO datasets and save them in a csv. file. 
 ```{r, eval=FALSE}
 ca_which_pis <- c()
 for (m in 1:nrow(ca_unique_ld)) {
@@ -230,8 +181,7 @@ for (m in 1:nrow(ca_unique_ld)) {
 write.csv(ca_which_pis, '../data/ca_sea_star_vs_pisco.csv')
 ```
 
-
-Next we define a function to combine species datasets and their corrsponding PISCO datasets. 
+Next we define a function to combine species datasets and their corrsponding PISCO datasets.  
 ```{r, eval=FALSE}
 find_the_pisco <- function(df, data_list) {
   rt <- data.frame()
@@ -248,85 +198,49 @@ find_the_pisco <- function(df, data_list) {
 ```
 ```{r, eval=FALSE}
 species_pis <- find_the_pisco(allLocationNDate, ca_which_pis$x)
-species_pis
-```
-```{r, eval=FALSE}
-write.csv(species_pis, '../data/species_which_pisco.csv')
 ```
 
-```{r, eval=FALSE}
-library(dataone)
-library(XML)
-locations <- resolve(cn, id)
-mnId <- locations$data[2, "nodeIdentifier"]
-mn <- getMNode(cn, mnId)
-```
+My goal is for each data entry of `species_pis`, extract the temprature information from its corresponding PISCO dataset.  
 
-For each data entry of `species_pis`, extract the temprature information from its corresponding PISCO dataset. 
-Define a function to download a PISCO dataset by its index in `dataset_w_pop`.
-```{r, eval=FALSE}
-downl_pis <- function(i) {
-  id <- dataset_w_pop[i, 3]
+Here take one dataset for example:
 
-  # download the metadata file to find the data table
-  metadata <- rawToChar(getObject(mn, id))
-  doc = xmlRoot(xmlTreeParse(metadata, asText=TRUE, trim = TRUE, ignoreBlanks = TRUE))
+```{r}
+# Use a data frame downloaded before
+dt1 <- read.csv(file = "~/Documents/nahis/data/d11.csv")
+dt1_tem <- filter(dt1, date == '2001-03-12', temp_c != 9999.00)
 
-  # now extract the node that has the data table's information
-  node <- getNodeSet(doc, "//entityName")
-  table_id <- xmlValue(node[[1]])
-  
-  if (grepl("\\.(TXT|txt)", table_id)) {
-    table_id <- gsub("\\.(TXT|txt)", "", table_id)
-  }
-  
-  # we can see that the ids have the pattern
-  dataRaw <- getObject(mn, paste0("doi:10.6085/AA/", table_id))
-  dataChar <- rawToChar(dataRaw)
-  theData <- textConnection(dataChar)
-  df <- read.csv(theData, stringsAsFactors=FALSE, header = TRUE, sep = " ", row.names=NULL)
-  return(df)
-}
-```
-
-
-```{r, eval=FALSE}
-get_temp <- function(spe_pis, spe_dt) {
-  spe_ind <- species_pis$species_ind
-  pis_ind <- species_pis$pis_ind
-  result <- data.frame()
-
-  for (i in 1:nrow(species_pis)) {
-    cur_spe <- spe_ind[i] # index of spe_dt 
-    cur_pis <- pis_ind[i] # index of pisco datasets
-    if (cur_pis >= 926) {
-      cur_pis <- cur_pis + 1
-    }
-    
-    pisco_df <- downl_pis(cur_pis)
-    ### if you've downloaded all the datasets:
-    ### pisco_df <- read.csv(file = paste0("../data/d", cur_pis, ".csv"), stringsAsFactors = FALSE)
-    
-    # discard if temp == 9999.00, which is equivalent to NA for PISCO datasets
-    tem <- filter(pisco_df, date == spe_dt$survey_date[cur_spe], temp_c != 9999.00)
-    result <- rbind(result, average(tem))
-  }
-}
-```
-
-```{r, eval=FALSE}
-dt1_tem <- filter(dt1, date == '2002-11-03', temp_c != 9999.00)
-unique(dt1$date)
 ggplot(data = dt1_tem, aes(x=X, y=temp_c)) +
   geom_bar(stat="identity", fill = "lightblue") +
   theme_minimal()
 ```
-As we see from the plot above, ocean temperature doesn't tend to vary a lot, for which one of the reasons is that water has a high "specific heat capacity". Hence I would prefer to see a long-term trend of ocean temperature and its relation to species data.   
+
+
+As we see from the plot above, the ocean temperature doesn't tend to vary a lot within a day, for which one of the reasons is that water has a high "specific heat capacity".  
+
+But let's take a look at the ocean temperature data for a longer period of time at one place.  
+First group the data frame by lumping_code, marine_common_year and target_assemblage:
+```{r}
+ca_merge <- sea_stars_ca %>% 
+  group_by(lumping_code, marine_common_year, target_assemblage) %>%
+  summarise(mean_percent = mean(percent_cover))
+```
+Plot the mean percent cover for balanus by year, at ANTELE.
+```{r}
+ca_merge %>%
+  filter(lumping_code == 'ANTELE', target_assemblage =='balanus') %>%
+  ggplot(aes(marine_common_year, mean_percent)) + 
+  geom_line() +
+  theme_minimal()
+  
+```
+
+Taking the mean of percent_cover over one survey day doesn't quite make sense, because percent cover is not an absolute value.
+Hence I would prefer to see a long-term trend of ocean temperature and its relation to species count data.   
 
 # Sea Star Wasting Syndrome  
 I got the [sea star wasting syndrome](https://www.eeb.ucsc.edu/pacificrockyintertidal/explore-the-data/index.html) data from one of the staff via email. 
 ```{r}
-ssws <- read.csv("../data/sswd_sea_star_observations_2019_0411.csv", stringsAsFactors = FALSE)
+ssws <- read.csv("../data/downloaded/sswd_sea_star_observations_2019_0411.csv", stringsAsFactors = FALSE)
 ```
 However, the wasting syndrome data has a different time range than the PISCO data:
 ```{r}
@@ -347,26 +261,3 @@ max(ssws_date)
 min(ssws_date)
 ```
 Hence I may need to save this dataset for later.
-
-
-# 
-
-
-
-```{r, eval=FALSE}
-ca_merge <- sea_stars_ca %>% 
-  group_by(lumping_code, marine_common_year, target_assemblage) %>%
-  summarise(mean_percent = mean(percent_cover))
-ca_merge
-```
-```{r, eval=FALSE}
-ca_merge %>%
-  filter(lumping_code == 'ANTELE', target_assemblage =='balanus') %>%
-  ggplot(aes(marine_common_year, mean_percent)) + 
-  geom_line() +
-  theme_minimal()
-  
-```
-
-
-I realize that taking the mean of percent_cover over one survey day doesn't make sense with temperature data for that day, since percent_cover is recorded for several times within a day 

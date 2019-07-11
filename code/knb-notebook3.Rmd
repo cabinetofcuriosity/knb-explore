@@ -1,362 +1,252 @@
 ---
-title: "Understanding and Processing KNB PISCO data"
+title: "KNB 3"
+author: "Yuqing Lu"
+date: "11/7/2018"
 output: github_document
 ---
 
-```{r}
-# Load some packages and import some data frames
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.path = '../image/')
+library(dataone)
+library(XML)
+
+cn <- CNode("PROD")
+dataset_w_pop <- read.csv("../data/pop_ds.csv", stringsAsFactors = FALSE)
+```
+
+# Get the most popular headers in KNB  
+Ciera suggested that looking for the most popular headers of all the datasets should be fun. I thought that would be interesting but had no idea where to start.   
+So I went to the KNB website and joined their Slack channel. One of the staff, Matt Jones, helped get all the attributes of 69957 datasets, extracted from their metadata files using their API. 
+
+```{r, eval = FALSE}
+# load the package
+library(dataone)
+
+# set to the KNB database
+cn <- CNode("PROD")
+mn <- getMNode(cn, "urn:node:KNB")
+
+# this gives a data frame of the first 1000 metadata files 
+# with only their ID and attribute information
+all <-
+  list(
+    q = "formatType:METADATA+AND+attributeName:*",
+    fl = "identifier,formatId,attributeName,attributeDescription",
+    wt = "xml",
+    rows = "1000",
+    start = "0"
+  )
+allre <- query(mn, solrQuery = all, as = "data.frame")
+```
+
+Then I used a for loop to merged the 70 data frames and the resulting data frame is `allre`, saved as a csv file. This takes really long.
+
+
+```{r, eval = FALSE}
+# load the package
+library(dataone)
+
+# set to the KNB database
+cn <- CNode("PROD")
+mn <- getMNode(cn, "urn:node:KNB")
+
+allre <- data.frame()
+for (i in seq(0, 69000, 1000)) {
+  all <-
+  list(
+    q = "formatType:METADATA+AND+attributeName:*",
+    fl = "identifier,formatId,attributeName,attributeDescription",
+    wt = "xml",
+    rows = "1000",
+    start = paste0(i)
+  )
+  allre <- rbind(allre, query(mn, solrQuery = all, as = "data.frame"))
+}
+write.csv(allre, file = "~/Documents/nahis/data/knb-attrs.csv")
+```
+
+Next I extract all the attribute names, in lower case, in the data frame and put them into one vector, `attrs`.
+
+Of course, some attributes may have different names even though they mean the same thing as other attributes. For example, some datasets may have an attribute names "len", which is the same as "length"; or some may have abbreviations. And this may be harmful to this exploration. So we may want to change the similar attribute
+
+```{r, eval=FALSE}
+# this function gives all the attribute names for one metafile, ie, one row of allre
+get_attr <- function(x) {
+  tolower(unlist(strsplit(allre$attributeName[x], "\\s+")))
+}
+attrs <- sapply(1:69957, get_attr, simplify=TRUE)
+```
+
+Now I make a frequency table of all the attribute names and make a barchart of them in descending order of frequency. Thus we can see which attributes are the most popular.  
+
+```{r, eval = FALSE}
+attr_tab <- table(factor(unlist(attrs)))
+most_pop <- sort(attr_tab, decreasing=TRUE)
+write.csv(most_pop, file = "~/Documents/nahis/data/knb-pop-attrs.csv")
+head(most_pop, 100)
+```
+
+```{r, eval=FALSE}
+most_pop <- read.csv("../data/attributes/knb-pop-attrs.csv", stringsAsFactors = FALSE)
+pop_20 <- head(most_pop, 20)
 library(ggplot2)
 library(dplyr)
-d203 <- read.csv("../data/d203.csv", stringsAsFactors = FALSE)
-dataset_w_pop <- read.csv("../data/pop_ds.csv", stringsAsFactors = FALSE)
 ```
-
-Let's look at one dataset, understand its attributes and do some processing. 
-```{r}
-head(d203, 100)
-```
-
-To obtain information of the columns, we need the metadata file. So we download the metadata file for this dataset from KNB. 
-
-```{r, eval = FALSE}
-dataset_w_pop <- read.csv("../data/pop_ds.csv", stringsAsFactors = FALSE)
-library(XML)
-library(dataone)
-id <- dataset_w_pop[203, 3]
-# get the node of this metadata using `dataOne` package
-locations <- resolve(cn, id)
-mnId <- locations$data[2, "nodeIdentifier"]
-mn <- getMNode(cn, mnId)
-
-# download the metadata file
-metadata <- rawToChar(getObject(mn, id))
-doc = xmlRoot(xmlTreeParse(metadata, asText=TRUE, trim = TRUE, ignoreBlanks = TRUE))
-saveXML(doc, file = "d203.xml")
-```
-
-# Overview of the dataset 
-From the metadata file downloaded, we obtain the following information:  
-## About the organization  
-PISCO is a large-scale marine research program that focuses on understanding the near-shore ecosystems of the U.S. West Coast. An interdisciplinary collaboration of scientists from four universities, PISCO integrates long-term monitoring of ecological and oceanographic processes at dozens of coastal sites with experimental work in the lab and field. We explore how individual organisms, populations, and ecological communities vary over space and time.  Findings are applied to issues of ocean conservation and management, and are shared through our public outreach and student training programs.
-
-## Data Collection  
-These data were collected by PISCO to understand the physical processes of the inner continental shelf and their potential effects on marine ecology.
-
-This metadata record describes bottom-mounted ADCP data collected at Fogarty Creek, Oregon, USA, by PISCO. Measurements were collected using an RDI 600 kHz Workhorse Sentinel ADCP beginning 2002-08-02.  The instrument depth was 014 meters, in an overall water depth of 15 meters (both relative to Mean Sea Level, MSL).  The instrument was programmed with a sampling interval of 2.0 minutes and a vertical resolution of 1 meter.
-
-Fogarty Creek (ADCP) 15m: FC15C: The nearshore mooring is located offshore of Fogarty Creek, approximately 4km South West of the onshore Lincoln Beach site, about 3.6km North of Depoe Bay, Oregon, USA.  The base of the mooring is in 15 meters of water below Mean Sea Level (MSL), and it extends up to 4 meters below MSL.  The altitudeMinimum and altitudeMaximum tags in this initial coverage section refer to the ADCP measurement range and are also referenced to MSL.  They do not represent the overall water depth.  Note the nominal range of the ADCP may extend from near-bottom (a depth expressed as a negative altitude) to slightly above MSL (a height expressed as a positive altitude)
-
-<westBoundingCoordinate>-124.074776
-<eastBoundingCoordinate>-124.074776
-<northBoundingCoordinate>44.841800
-<southBoundingCoordinate>44.841800
-<boundingAltitudes>
-  <altitudeMinimum>-014
-  <altitudeMaximum>9
-  <altitudeUnits>meter
-
-Methods for PISCO bottom-mounted ADCP data collection and quality-control are available online, see the protocol citation.  Data were collected using an RDI 600 kHz Workhorse Sentinel ADCP set to 40 pings per 2.0-minute ensemble, with a vertical resolution of 1 meter.
-
-
-## Data Attributes
-- date: Greenwich Mean Time calendar date of each ADCP measurement record, using ISO 8601 standard format YYYY-MM-DD
-
-- time: Greenwich Mean Time of each ADCP measurement record, to the 1/100th of a second, using ISO 8601 standard format hh:mm:ss.ssZ.  The &apos;Z&apos; indicates &apos;Zero Meridian&apos; (or Greenwich Mean Time) and must be included. [00z: https://www.weather.gov/jetstream/time]
-
-- yearday: Greenwich Mean Time of each ADCP measurement record, expressed as fractional decimal days since Jan. 1 of the year measurement was made.  For example, 12 noon GMT on Jan. 2 is represented by yearday 1.5, NOT yearday 2.5.
-
-- height: The height of the velocity, temperature, or pressure measurement, in meters above the sea bottom.
-
-- depth: The depth of the velocity, temperature, or pressure measurement, in positive meters below Mean Sea Level (MSL).  Bins above MSL are represented with negative depths.
-
-- waterdepth: The fluctuating water depth (sea floor to sea surface distance) at the measurement site, in meters, as determined by location of sea surface from ADCP pressure measurements, or if pressure is unavailable, the maximum in ADCP echo intensity.
-[9999.0: missing data]
-
-- temp_c: seawater temperature from ADCP sensor
-
-- pressure: pressure measured at the ADCP sensor, measured in decibars with a precision defined as the effective resolution of the instrument
-
-- intensity: ADCP echo intensity (or backscatter), in RDI counts.  This value represents the average of all 4 beams, rounded to the nearest whole number.
-
-- data_quality: A post-processing quantitative data quality indicator.  Specifically, RDI percent-good #4, in earth coordinates (percentage of successful 4-beam transformations), expressed as a percentage, 50, 80, 95, etc.
-
-- eastward: True eastward velocity measurements.  Negative values represent westward velocities. [metersPerSecond]
-
-- northward: True northward velocity measurements.  Negative values represent southward velocities.
-
-- upwards: True upwards velocity measurements.  Negative values represent downward velocities.
-
-- flag: data flag used to qualify data as bad, questionable, etc. [0 - good; 999 - bad]
-
-- errorvelocity: The difference of two vertical velocities, each measured by an opposing pair of ADCP beams [upward and downward]
-
-
-
-# Analyzing Attributes
-Now let's take a closer look at the attributes to see what happens to them over time.  
-```{r}
-unique(d203$time)
-```
-We can tell that the time is incresing by the result above, along with the attribute information of `time` from the metadata file.  
-Because the time is always increasing, we can just use the index number, i.e., the first column as the time axis for now.  
-
-> The wording of the metadata is confusing (and wrong) - that two minute sampling interval doesn't mean that the instrument sampled for two minutes, rather, two minutes is the "time per ensemble", which is defined as the "minimum interval between data collection cycles". So all that means is that the ADCP sampled every two minutes, but not that data collection lasted a full two minutes. The metadata further states that the unit sampled 40 pings per ensemble, but if you look at the data you actually have 20 pings per ensemble. What the metadata and CSV don't tell me is the TP - or the time between pings, so there's no real way to tell from this how those 20 pings were spaced out. The unit could have sent out 1 ping per second for 20 seconds, then shut down for 1 minute and 40 seconds, or it could have spread them out further during that two minute ensemble. 
-> the ping in row 1 happened before the ping in row 2, and so on
-
-```{r, 6to20, eval=FALSE}
-ggplot(data = d203, aes(x=X, y=height)) +
+```{r, 6to20}
+ggplot(data = pop_20, aes(x=reorder(Var1, Freq), y=Freq)) +
   geom_bar(stat="identity", fill = "lightblue") +
-  theme_minimal()
+  theme_minimal() +
+  coord_flip()
+  
 ```
+
+So we see that the first five attributes don't have any special meanings. They just represend time/date. So let's get rid of all the "boring" attributes.
 ```{r}
-ggplot(data = d203, aes(x=X, y=depth)) +
+library(stringr)
+attr_not_boring <- 
+  filter(most_pop, !str_detect(
+                    Var1, "(year|date|time|day|site|month|location|station)"))
+```
+
+
+We display it with a plot.  
+```{r}
+pop6to20 <- slice(attr_not_boring, 1:20)
+ggplot(data = pop6to20, aes(x=reorder(Var1, Freq), y=Freq)) +
   geom_bar(stat="identity", fill = "lightblue") +
-  theme_minimal()
+  theme_minimal() +
+  coord_flip()
 ```
+
+
+Let's extract the metafiles with common popular attributes. Now it seems that the datasets that have the first 12 "not boring popular" attributes in common come from the same cluster of datasets, since they have exactly the same attributes and attribute descriptions.
 
 ```{r}
-ggplot(data = d203, aes(x=X, y=waterdepth)) +
-  geom_line(color = "lightblue") +
-  theme_minimal()
+all_files <- read.csv("../data/attributes/knb-attrs.csv", stringsAsFactors = FALSE)
 ```
-
-```{r}
-ggplot(data = d203, aes(x=X, y=temp_c)) +
-  geom_line(color = "lightblue") +
-  theme_minimal()
-```
-
-```{r}
-ggplot(data = d203, aes(x=X, y=pressure)) +
-  geom_point(color = "lightblue") +
-  theme_minimal()
-```
-
-```{r}
-ggplot(data = d203, aes(x=X, y=data_quality)) +
-  geom_point(color = "lightblue") +
-  theme_minimal()
-```
-
-```{r}
-ggplot(data = d203, aes(x=X, y=eastward)) +
-  geom_point(color = "lightblue") +
-  theme_minimal()
-```
-
-It looks dense so we extract part of it to show the pattern:
-```{r}
-ggplot(data = head(d203, 500), aes(x=X, y=eastward)) +
-  geom_line(color = "lightblue") +
-  ggtitle('first 500 eastward') + 
-  theme_minimal()
-```
-
-```{r}
-ggplot(data = d203, aes(x=X, y=northward)) +
-  geom_line(color = "lightblue") +
-  theme_minimal()
-```
-Similar as above:
-```{r}
-ggplot(data = head(d203, 500), aes(x=X, y=northward)) +
-  geom_line(color = "lightblue") +
-  ggtitle('first 500 northward') + 
-  theme_minimal()
-```
-
-
-```{r}
-ggplot(data = d203, aes(x=X, y=upwards)) +
-  geom_line(color = "lightblue") +
-  theme_minimal()
-```
-
-```{r}
-ggplot(data = head(d203, 500), aes(x=X, y=upwards)) +
-  geom_line(color = "lightblue") +
-  ggtitle('first 500 northward') + 
-  theme_minimal()
-```
-
-
-# Location  
-We want to connect the sea stars data to PISCO data based on their locations.  
-
-## Sea Stars
-
-So first we get the [sea stars data](https://www.eeb.ucsc.edu/pacificrockyintertidal/explore-the-data/index.html). We can see the data is inside four states.
-```{r}
-sea_stars <- read.csv("../data/phototranraw_download.csv", stringsAsFactors = FALSE)
-unique(sea_stars$state_province)
-```
-
-We first examine the sea stars data inside California and later to all the data.
-```{r}
-sea_stars_ca <- sea_stars[sea_stars$state_province == 'California', ]
-# add ids to represent each row
-sea_stars_ca <- mutate(sea_stars_ca, id = 1:nrow(sea_stars_ca))
-head(sea_stars_ca, 100)
-```
-
-We can see plenty of repeating latitudes and longitudes so we can extract the unique pairs of latitude and longitude, ie, unique locations.
-```{r}
-ca_unique_ld <- unique(sea_stars_ca[, c('latitude','longitude', 'survey_date')])
-ca_unique_ld
-```
-
-```{r}
-unique(sea_stars_ca[, 'target_assemblage'])
-```
-
-## PISCO
-Some setup for getting the location data.
 ```{r, eval = FALSE}
-library(dataone)
-library(XML)
+pop_vars <- slice(attr_not_boring, 1:12)$Var1
+dataset_w_pop <- filter(all_files, grepl(pop_vars[1], all_files$attributeName))
+for (i in 2:length(pop_vars)) {
+    dataset_w_pop <- filter(dataset_w_pop, grepl(pop_vars[i], dataset_w_pop$attributeName))
+}
+write.csv(dataset_w_pop, file = "../data/pop_ds.csv")
 
 id <- dataset_w_pop[1, 3]
-cn <- CNode("PROD")
+```
+
+```{r}
+dataset_w_pop <- read.csv("../data/pop_ds.csv", stringsAsFactors = FALSE)
+```
+
+# Download all the selected datasets
+I want to do some analysis on these datasets.  
+So I download all the data using their [API](https://github.com/DataONEorg/rdataone) with their metadata files.  
+One metadata file shows:
+> This metadata record describes bottom-mounted ADCP data collected at Sand Hill Bluff, California, USA, by PISCO. Measurements were collected using an RDI 600 kHz Workhorse Sentinel ADCP beginning 2001-03-12.  The instrument depth was 020 meters, in an overall water depth of 021 meters (both relative to Mean Sea Level, MSL).  The instrument was programmed with a sampling interval of 2.0 minutes and a vertical resolution of 1 meter."
+
+Right now, according to the KNB staff, there is something wrong with the website so we can't directly get the data from KNB. We need to do some trick. So going to DataOne website, we can see [this](https://search.dataone.org/view/doi:10.6085/AA/SHB001_021ADCP020R00_20010312.50.1) is exactly the same dataset.  
+By inspecting the HTML code of the website, we found the ID for the data table is "doi:10.6085/AA/SHB001_021ADCP020R00_20010312.40.1". We see the IDs have the same pattern: "doi:10.6085/AA/" + unique ID(extracted from the metadata file with the help of an [XML tutorial](https://www.stat.berkeley.edu/~statcur/Workshop2/Presentations/XML.pdf)).  
+We can check later by comparing the total row numbers. 
+```{r, eval = FALSE}
+# load the package
+library(XML)
+library(dataone)
 
 # get the node of this metadata using `dataOne` package
 locations <- resolve(cn, id)
 mnId <- locations$data[2, "nodeIdentifier"]
 mn <- getMNode(cn, mnId)
+
+# download the metadata file to find the data table
+metadata <- rawToChar(getObject(mn, id))
+doc = xmlRoot(xmlTreeParse(metadata, asText=TRUE, trim = TRUE, ignoreBlanks = TRUE))
+print(doc[1])
+tf <- tempfile()
+saveXML(doc, file="d1.xml")
+
+# now extract the node that has the data table's information
+node <- getNodeSet(doc, "//objectName")
+table_id <- xmlValue(node[[1]])
 ```
 
-Define a function which returns location information of the ith PISCO datasets.
+We put the data frame into a .csv file:  
+```{r}
+# we can see that the ids have the pattern
+dataRaw <- getObject(mn, paste0("doi:10.6085/AA/", table_id))
+dataChar <- rawToChar(dataRaw)
+theData <- textConnection(dataChar)
+df <- read.csv(theData, stringsAsFactors=FALSE, header = TRUE, sep = " ")
+write.csv(df, file = "../data/d11.csv")
+```
+
+
+
 ```{r, eval = FALSE}
-getLocationNDate <- function(i) {
-  # id of the ith row of the PISCO datasets
+id <- dataset_w_pop[1, 3]
+  
+# get the node of this metadata using `dataOne` package
+locations <- resolve(cn, id)
+mnId <- locations$data[2, "nodeIdentifier"]
+mn <- getMNode(cn, mnId)
+
+
+downl <- function(i) {
   id <- dataset_w_pop[i, 3]
 
   # download the metadata file to find the data table
   metadata <- rawToChar(getObject(mn, id))
   doc = xmlRoot(xmlTreeParse(metadata, asText=TRUE, trim = TRUE, ignoreBlanks = TRUE))
 
-  # now extract the node that has the data table's location information
-  node <- getNodeSet(doc, "//boundingCoordinates")
-  curLoc <- head(xmlToDataFrame(node, stringsAsFactors = FALSE), 1)
-  west <- as.numeric(curLoc[1, 1])
-  east <- as.numeric(curLoc[1, 2])
-  north <- as.numeric(curLoc[1, 3])
-  south <- as.numeric(curLoc[1, 4])
+  # now extract the node that has the data table's information
+  node <- getNodeSet(doc, "//entityName")
+  table_id <- xmlValue(node[[1]])
   
-  begin_node <- getNodeSet(doc, "//beginDate")
-  begin_date <- xmlToDataFrame(begin_node, stringsAsFactors = FALSE)[1, 1]
-  end_node <- getNodeSet(doc, "//endDate")
-  end_date <- xmlToDataFrame(end_node, stringsAsFactors = FALSE)[1, 1]
-  
-  # take the average of west and east, and north and south
-  thisLoc <- data.frame(longitude = c((1/2)*(west + east)), latitude = c((1/2)*(north + south)), begin = c(begin_date), end = c(end_date), ID = c(id))
-  
-  return(thisLoc)
-}
-```
-
-```{r, eval = FALSE}
-getLocation(926)
-```
-> Error in .local(x, ...) : get() error: READ not allowed on doi:10.6085/AA/JALXXX_015ADCP015R00_20030529.50.2
-
-```{r}
-getLocationNDate(1)
-```
-
-After testing, 926th ID doesn't work
-
-```{r, eval = FALSE}
-allLocationNDate <- data.frame()
-for (i in 1:925) {
-  allLocationNDate <- rbind(allLocationNDate, getLocationNDate(i))
-}
-
-for (i in 927:nrow(dataset_w_pop)) {
-  allLocationNDate <- rbind(allLocationNDate, getLocationNDate(i))
-}
-```
-
-We save this data frame into a `.csv` file.
-```{r, eval = FALSE}
-write.csv(allLocationNDate, '../data/pisco-locations-dates.csv')
-```
-
-## Find the nearest PISCO site for each sea star data entry  
-Define a function that takes in index `i`, sea stars data `sea_star_dt` and PISCO data `pisco_dt` and returns the row number of the neareast PISCO data
-```{r}
-allLocationNDate <- read.csv("../data/pisco-locations-dates.csv", stringsAsFactors = FALSE)
-```
-```{r}
-allLocationNDate
-```
-```{r}
-
-```
-
-
-
-Since there are begin and end dates in PISCO datasets, we want to transform the dates into numbers so that we can compare the dates and determine if a data entry in the sea star dataset can find a corresponding dataset in PISCO ones. 
-Now we define a function to do so, using method found on [stackoverflow](https://stackoverflow.com/a/8215581/10733819)
-```{r}
-dateToNum <- function(date) {
-  rt <- 0
-  date <- as.POSIXlt(date, format = "%Y-%m-%d")
-  # yearday will always be less than or equal to 366 so we can represent yeardays as decimal numbers, and years as whole numbers
-  rt <- 1900 + date$year + date$yday / 366
-  return(rt)
-}
-```
-
-```{r}
-dateToNum('2001-03-12')
-dateToNum('2008-03-12')
-```
-
-
-We put in a data frame of sea star wasting syndrome with unique pairs of locations and dates
-```{r}
-nearPisWDate <- function(i, sea_star_dt, pisco_dt) {
-  ss <- sea_star_dt[i, ]
-  ss_loc <- c(ss$longitude, ss$latitude)
-  # change the date into a number
-  ss_date_n <- dateToNum(ss$survey_date)
-  
-  min_dis <- 100000
-  which_pis <- 0
-  for (j in 1:nrow(pisco_dt)) {
-    cur_pisco <- pisco_dt[j, ]
-    cur_pisco_date <- c(cur_pisco$begin[1], cur_pisco$end[1])
-    cur_pisco_begin <- dateToNum(cur_pisco_date[1])
-    cur_pisco_end <- dateToNum(cur_pisco_date[2])
-    if (ss_date_n > cur_pisco_end | ss_date_n < cur_pisco_begin) {
-      next
-    }
-    
-    cur_pisco_loc <- c(cur_pisco$longitude, cur_pisco$latitude)
-    dis <- (cur_sea_star_loc[1] - cur_pisco_loc[1])**2 + (cur_sea_star_loc[2] - cur_pisco_loc[2])**2
-    if (dis < min_dis) {
-      min_dis <- dis
-      which_pis <- j
-    }
+  if (grepl("\\.(TXT|txt)", table_id)) {
+    table_id <- gsub("\\.(TXT|txt)", "", table_id)
   }
-  return(which_pis)
+  
+  # we can see that the ids have the pattern
+  dataRaw <- getObject(mn, paste0("doi:10.6085/AA/", table_id))
+  dataChar <- rawToChar(dataRaw)
+  theData <- textConnection(dataChar)
+  df <- read.csv(theData, stringsAsFactors=FALSE, header = TRUE, sep = " ", row.names=NULL)
+  write.csv(df, file = paste0("../data/downloaded/d", i, ".csv"))
+  return(table_id)
 }
-```
 
-```{r}
-ca_which_pis <- c()
-for (m in 1:nrow(sea_stars_ca)) {
-  ca_which_pis <- c(ca_which_pis, nearPis(m, sea_stars_ca, allLocation))
-}
+sapply(1083:nrow(dataset_w_pop), downl)
 
 ```
 ```{r}
-nearPisWDate(1, ca_unique_ld, allLocationNDate)
+
+downl(654)
+
+  id <- dataset_w_pop[113, 3]
+
+  # download the metadata file to find the data table
+  metadata <- rawToChar(getObject(mn, id))
+  doc = xmlRoot(xmlTreeParse(metadata, asText=TRUE, trim = TRUE, ignoreBlanks = TRUE))
+
+  # now extract the node that has the data table's information
+  node <- getNodeSet(doc, "//entityName")
+  table_id <- xmlValue(node[[1]])
+  
+  if (grepl("\\.(TXT|txt)", table_id)) {
+    table_id <- gsub("\\.(TXT|txt)", "", table_id)
+  }
+  
+  # we can see that the ids have the pattern
+  dataRaw <- getObject(mn, paste0("doi:10.6085/AA/", table_id))
+  dataChar <- rawToChar(dataRaw)
+  theData <- textConnection(dataChar)
+  df <- read.csv(theData, stringsAsFactors=FALSE, header = TRUE, sep = " ", row.names=NULL)
+  write.csv(df, file = paste0("../data/downloaded/d", 114, ".csv"))
+  
 ```
 
-```{r}
-dateToNum(allLocationNDate[1, ]$survey_date)
-```
+There are a few files that don't match the pattern, so I have to manually find their table ID and download them. eg, 
 
-non-wasting control grooup
+7, 8, 9, 15, 23, 28, 64, 77, 93, 105, 106, 110, 113, 121, 132, 133, 135, 186, 201, 223, 257, 301, 340, 345, 359, 360, 414, 418, 430, 503, 519, 537, 552, 562, 573, 580, 617, 653, 655, 673, 676, 688, 692, 694, 697, 701, 710, 727, 778, 786, 798, 814, 817, 836, 851, 863, 870, 878, 879, 885, 900, 912, 915, 927, 953, 991, 1003, 1015, 1082 
 
+can't be found -- newer version
