@@ -59,7 +59,7 @@ seastarkat_ca_g <- seastarkat_ca %>%
   group_by(season_sequence, marine_common_year, target_assemblage, latitude, longitude) %>%
   summarise(total_sum = sum(total))
 ```
-
+  
 For each size and count data entry, I find a nearest PISCO location(latitude and longitude), using the Euclidean distance, in the same season and year. If the minimum Euclidean distance is bigger than 1 or the seasons and the years do not match, I assume this size and count data entry doesn't have a corresponding PISCO dataset.
 
 ``` r
@@ -245,7 +245,7 @@ down_pis_temp <- function(cur_pis) {
   return(filter(pisco_df, temp_c != 9999.00)$temp_c)
 }
 ```
-
+  
 Initialize the mean\_temp column with a huge unrealistic value so that it works as `NA`.
 For each row of size and count data frame, use `tryCatch` to obtain the temperature information from the related PISCO datasets and print error information.
 
@@ -266,7 +266,7 @@ for (i in 280:nrow(needed_pisID)) {
 }
 write.csv(sk_ca_filtered, file = paste0("../data/seastarkat_ca_temp1.csv"))
 ```
-
+  
 I want to make a plot of water temperature for each location in time order, so I first extract the unique locations and store them in a data frame. We can tell there are 27 unique locations, hence I will make 27 plots.
 
 ``` r
@@ -275,7 +275,7 @@ uni_loc_sk <- sk_ca_filtered %>%
   group_by(longitude, latitude) %>%
   count()
 ```
-
+  
 For each location, I extract its temperature data from the original data frame. Take the first location for example:
 
 ``` r
@@ -296,7 +296,9 @@ scale_colour_manual("",
                     values = c("light green", "light blue")) 
 ```
 
-![](knb-sckat_files/figure-markdown_github/unnamed-chunk-21-1.png) Notice that the sum is a lot larger than temperature so I divide temperature by 20 in order for a clearer trend.
+![](knb-sckat_files/figure-markdown_githubunnamed-chunk-21-1.png) 
+
+Notice that the sum is a lot larger than temperature so I divide temperature by 20 in order for a clearer trend.
 
 ``` r
 ggplot() +
@@ -310,7 +312,10 @@ ggplot() +
   annotate("text", x = cur_df$ind, y = rep(1:2, len = length(cur_df$ind)), label = cur_df$marine_common_year)
 ```
 
-![](knb-sckat_files/figure-markdown_github/unnamed-chunk-22-1.png) For a specific season in one year, I plot a map with species count information, using `ggmap`.
+![](knb-sckat_files/figure-markdown_githubunnamed-chunk-22-1.png) 
+
+For a specific season in one year, I plot a map with species count information, using `ggmap`.
+
 Download `ggmap`:
 
 ``` r
@@ -367,7 +372,11 @@ ggmap(myMap) +
 
     ## Warning: Removed 21 rows containing missing values (geom_point).
 
-![](knb-sckat_files/figure-markdown_github/unnamed-chunk-25-1.png) The locations are out of map range so I should enlarge the map range.
+
+![](knb-sckat_files/figure-markdown_githubunnamed-chunk-25-1.png) 
+
+The locations are out of map range so I should enlarge the map range.
+
 
 ``` r
 myMap <- get_map(location = myLocation, source = "stamen", maptype = "watercolor", zoom = 6)
