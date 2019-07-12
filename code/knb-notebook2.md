@@ -215,7 +215,7 @@ If I do the quality of data, I think I can do something similar to what I did in
 Handle the data
 ===============
 
-Is there something that could be done to the data on the database side that would make your life easier when using this data? Do you wish it was in json over XML? Do you wish that there was a tool in Python that would connect to the database? Did you find the documentation incredibly hard to follow? What are some things you googled that helped you? What are the things you googled that had no answer but wish there was?
+> Is there something that could be done to the data on the database side that would make your life easier when using this data? Do you wish it was in json over XML? Do you wish that there was a tool in Python that would connect to the database? Did you find the documentation incredibly hard to follow? What are some things you googled that helped you? What are the things you googled that had no answer but wish there was?
 
 I'm actually able to read XML now using Atom because it colors different nodes. I also changed some settings to "soft wrap at preffered line length" and it makes xml way easier to read! I'm almost in love with it!
 Useful guide to limit line lengths in atom [here](https://stackoverflow.com/questions/49616864/limiting-line-length-in-atom)

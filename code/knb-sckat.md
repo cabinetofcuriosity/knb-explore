@@ -131,7 +131,7 @@ ggplot() +
 
     ## Warning: Removed 7 rows containing missing values (geom_point).
 
-![](knb-sckat_files/figure-markdown_githubunnamed-chunk-11-1.png)
+![](knb-sckat_files/figure-markdown_github/unnamed-chunk-11-1.png)
 
 ``` r
 ggplot() +
@@ -147,7 +147,7 @@ ggplot() +
 
     ## Warning: Removed 12 rows containing missing values (geom_point).
 
-![](knb-sckat_files/figure-markdown_githubunnamed-chunk-12-1.png)
+![](knb-sckat_files/figure-markdown_github/unnamed-chunk-12-1.png)
 
 Adding PISCO datasets with the same locations
 ---------------------------------------------
@@ -315,6 +315,7 @@ ggplot() +
 ![](knb-sckat_files/figure-markdown_githubunnamed-chunk-22-1.png) 
 
 For a specific season in one year, I plot a map with species count information, using `ggmap`.
+
 Download `ggmap`:
 
 ``` r
@@ -371,9 +372,11 @@ ggmap(myMap) +
 
     ## Warning: Removed 21 rows containing missing values (geom_point).
 
+
 ![](knb-sckat_files/figure-markdown_githubunnamed-chunk-25-1.png) 
 
 The locations are out of map range so I should enlarge the map range.
+
 
 ``` r
 myMap <- get_map(location = myLocation, source = "stamen", maptype = "watercolor", zoom = 6)
@@ -420,7 +423,7 @@ ggmap(myMap) +
 
     ## Warning: Removed 1 rows containing missing values (geom_rect).
 
-![](knb-sckat_files/figure-markdown_githubunnamed-chunk-26-1.png)
+![](knb-sckat_files/figure-markdown_github/unnamed-chunk-26-1.png)
 
 ``` r
 par(mfrow=c(27,1)) 
@@ -445,4 +448,4 @@ for (i in 1:nrow(uni_loc_sk)) {
 }
 ```
 
-![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-1.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-2.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-3.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-4.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-5.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-6.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-7.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-8.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-9.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-10.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-11.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-12.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-13.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-14.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-15.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-16.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-17.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-18.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-19.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-20.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-21.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-22.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-23.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-24.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-25.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-26.png)![](knb-sckat_files/figure-markdown_githubunnamed-chunk-27-27.png)
+![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-1.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-2.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-3.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-4.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-5.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-6.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-7.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-8.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-9.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-10.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-11.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-12.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-13.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-14.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-15.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-16.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-17.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-18.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-19.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-20.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-21.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-22.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-23.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-24.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-25.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-26.png)![](knb-sckat_files/figure-markdown_github/unnamed-chunk-27-27.png)
